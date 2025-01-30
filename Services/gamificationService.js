@@ -1,9 +1,5 @@
 // /services/gamificationService.js
-<<<<<<< HEAD
 import User from '../models/User';
-=======
-const User = require('../models/User');
->>>>>>> 34e4fcd325fb0fcefb9a1205591a5423aac30db9
 
 // Function to get leaderboard based on user streaks
 exports.getLeaderboard = async () => {

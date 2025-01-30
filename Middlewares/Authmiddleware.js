@@ -1,8 +1,4 @@
-<<<<<<< HEAD
 import jwt from'jsonwebtoken'; // Import jwt module
-=======
-const jwt = require('jsonwebtoken');
->>>>>>> 34e4fcd325fb0fcefb9a1205591a5423aac30db9
 
 module.exports = (req, res, next) => {
     const token = req.cookies.jwt || req.headers.authorization?.split(" ")[1]; // Get token from cookies or headers

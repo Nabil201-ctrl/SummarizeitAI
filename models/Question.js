@@ -1,9 +1,5 @@
 // /models/Question.js
-<<<<<<< HEAD
 import mongoose from 'mongoose';
-=======
-const mongoose = require('mongoose');
->>>>>>> 34e4fcd325fb0fcefb9a1205591a5423aac30db9
 
 const questionSchema = new mongoose.Schema({
     content: { type: String, required: true },

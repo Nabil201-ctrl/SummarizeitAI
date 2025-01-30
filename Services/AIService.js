@@ -1,9 +1,5 @@
 // /services/aiService.js
-<<<<<<< HEAD
 import openai from 'openai'; // Example using OpenAI API for summarization and question generation
-=======
-const openai = require('openai'); // Example using OpenAI API for summarization and question generation
->>>>>>> 34e4fcd325fb0fcefb9a1205591a5423aac30db9
 
 // AI function for PDF summarization
 exports.summarizePDF = async (pdfContent) => {

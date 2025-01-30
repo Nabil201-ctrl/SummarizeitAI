@@ -1,11 +1,7 @@
 /////////////// Smart Study Planner ///////////////////
 
 // /controllers/studyPlannerController.js
-<<<<<<< HEAD
 import studyPlannerService from '../Services/studyPlannerService';
-=======
-const studyPlannerService = require('../Services/studyPlannerService');
->>>>>>> 34e4fcd325fb0fcefb9a1205591a5423aac30db9
 
 // Route to generate study plan based on user's exam dates and revision needs
 exports.generateStudyPlan = async (req, res) => {

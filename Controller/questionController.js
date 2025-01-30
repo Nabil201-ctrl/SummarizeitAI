@@ -1,9 +1,5 @@
 // /controllers/questionController.js
-<<<<<<< HEAD
 import questionService from '../Services/questionService';
-=======
-const questionService = require('../services/questionService');
->>>>>>> 34e4fcd325fb0fcefb9a1205591a5423aac30db9
 
 // Route to generate adaptive questions based on user performance
 exports.generateAdaptiveQuestions = async (req, res) => {

@@ -1,11 +1,7 @@
 ///////////////////// Leaderboards, Streaks, Rewards //////////////////////
 
 // /controllers/gamificationController.js
-<<<<<<< HEAD
 import gamificationService from '../services/gamificationService';
-=======
-const gamificationService = require('../services/gamificationService');
->>>>>>> 34e4fcd325fb0fcefb9a1205591a5423aac30db9
 
 // Route to get the leaderboard
 exports.getLeaderboard = async (req, res) => {
