@@ -1,5 +1,9 @@
 // /services/questionService.js
+<<<<<<< HEAD
 import Question from '../models/Question';
+=======
+const Question = require('../models/Question');
+>>>>>>> 34e4fcd325fb0fcefb9a1205591a5423aac30db9
 
 // Function to generate adaptive questions based on difficulty
 exports.generateQuestions = async (difficulty) => {

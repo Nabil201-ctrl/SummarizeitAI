@@ -1,8 +1,13 @@
 /////////////// Logic for Generating Study Plans ///////////////////
 
 // /services/studyPlannerService.js
+<<<<<<< HEAD
 import StudyPlan from '../models/StudyPlan';
 import User from '../models/User';
+=======
+const StudyPlan = require('../models/StudyPlan');
+const User = require('../models/User');
+>>>>>>> 34e4fcd325fb0fcefb9a1205591a5423aac30db9
 
 // Function to generate a smart study plan based on the user's exam date
 exports.createStudyPlan = async (userId, examDate) => {

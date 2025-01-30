@@ -1,5 +1,9 @@
 // /services/paymentService.js
+<<<<<<< HEAD
 import paypal from 'paypal-rest-sdk';
+=======
+const paypal = require('paypal-rest-sdk');
+>>>>>>> 34e4fcd325fb0fcefb9a1205591a5423aac30db9
 
 // Configure PayPal SDK with environment variables
 paypal.configure({
