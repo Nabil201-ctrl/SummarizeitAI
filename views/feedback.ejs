@@ -1,0 +1,28 @@
+<%- include("partials/header") %>
+
+<h2>Feedback & Results</h2>
+
+<% if (results.length > 0) { %>
+  <% results.forEach((entry) => { %>
+    <h3><%= entry.pdfName %></h3>
+    <ul>
+      <% entry.questions.forEach((q) => { %>
+        <li>
+          <strong>Q:</strong> <%= q.question %> <br>
+          <strong>Your Answer:</strong> <%= q.userAnswer || "Not answered" %> <br>
+          <strong>Correct Answer:</strong> <%= q.correctAnswer %> <br>
+          <% if (q.isCorrect === true) { %>
+            ✅ Correct!
+          <% } else if (q.isCorrect === false) { %>
+            ❌ Incorrect!
+          <% } %>
+        </li>
+        <hr>
+      <% }); %>
+    </ul>
+  <% }); %>
+<% } else { %>
+  <p>No responses yet.</p>
+<% } %>
+
+<%- include("partials/footer") %>

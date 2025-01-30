@@ -1,0 +1,19 @@
+<!-- User dashboard -->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Dashboard</title>
+    <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+    <%- include('partials/header') %>
+    <main>
+        <h1>Dashboard</h1>
+        <p>Welcome, <%= user.username %>!</p>
+        <p>Your Subscription: <%= user.subscription.plan || "None" %></p>
+        <a href="/subscription">Manage Subscription</a> | <a href="/auth/logout">Logout</a>
+    </main>
+    <%- include('partials/footer') %>
+</body>
+</html>

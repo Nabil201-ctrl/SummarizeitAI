@@ -1,0 +1,25 @@
+<!-- Subscription page -->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Subscription</title>
+    <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+    <%- include('partials/header') %>
+    <main>
+        <h1>Choose a Subscription Plan</h1>
+        <form action="/payments/create" method="POST">
+            <label>
+                <input type="radio" name="plan" value="Basic" required> Basic - $10/month
+            </label>
+            <label>
+                <input type="radio" name="plan" value="Premium"> Premium - $20/month
+            </label>
+            <button type="submit">Subscribe</button>
+        </form>
+    </main>
+    <%- include('partials/footer') %>
+</body>
+</html>
