@@ -1,15 +1,9 @@
-////////// Database Configuration ///////
+// /config/db.js
+const mongoose = require('mongoose');
 
-import mongoose from 'mongoose';
+// Connect to MongoDB database
+mongoose.connect(process.env.MONGODB_URI, { useNewUrlParser: true, useUnifiedTopology: true })
+    .then(() => console.log('MongoDB connected'))
+    .catch(err => console.error('MongoDB connection error: ', err));
 
-const connectDB = async () => {
-  try {
-    await mongoose.connect(process.env.DB_URI, { useNewUrlParser: true, useUnifiedTopology: true });
-    console.log('MongoDB connected');
-  } catch (error) {
-    console.error(error.message);
-    process.exit(1);
-  }
-};
-
-module.exports = connectDB;
+module.exports = mongoose;

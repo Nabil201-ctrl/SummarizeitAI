@@ -1,16 +1,11 @@
-const mongoose = require("mongoose");
+// /models/Question.js
+import mongoose from 'mongoose';
 
 const questionSchema = new mongoose.Schema({
-  userId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
-  pdfName: { type: String, required: true },
-  questions: [{ 
-    question: String, 
-    options: [String], 
-    correctAnswer: String,
-    userAnswer: { type: String, default: null }, // Stores the user's answer
-    isCorrect: { type: Boolean, default: null }  // Tracks if the answer is correct
-  }],
-  createdAt: { type: Date, default: Date.now }
+    content: { type: String, required: true },
+    correctAnswer: { type: String, required: true },
+    difficulty: { type: String, enum: ['easy', 'medium', 'hard'], default: 'medium' },
+    userPerformance: { type: Number, default: 0 } // Tracks user performance for adaptive learning
 });
 
-module.exports = mongoose.model("Question", questionSchema);
+module.exports = mongoose.model('Question', questionSchema);

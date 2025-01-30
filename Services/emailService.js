@@ -1,7 +1,7 @@
-const nodemailer = require('nodemailer');
-const fs = require('fs');
-const path = require('path');
-const pdfkit = require('pdfkit');
+import nodemailer from 'nodemailer';
+import fs from 'fs';
+import path from 'path';
+import pdfkit from 'pdfkit';
 require('dotenv').config();
 
 // Nodemailer transporter setup for email sending

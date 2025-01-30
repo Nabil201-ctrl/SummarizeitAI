@@ -1,13 +1,101 @@
-# SaaS Project
+# SUMMARIZE IT AI
 
 ## Overview
-This project is a **Software-as-a-Service (SaaS) application** with **subscription-based payments** using **PayPal**. Users can **register, subscribe**, and access **AI-based document summarization** features.
+
+Halal MultiService is a SaaS platform that provides AI-powered summarization, adaptive learning, interactive PDF markup, and gamification features. It offers a subscription-based model with PayPal integration, Google authentication, and advanced tracking of user performance.
 
 ## Features
-- **User Authentication**: Register, login, and manage accounts.
-- **Subscription System**: PayPal-based payments with multiple plans.
-- **AI Document Summarization**: Upload a document and get a summarized version.
-- **Secure & Scalable**: Built with **Node.js, Express, MongoDB, and EJS**.
+
+- **AI-Powered Summarization & Question Generation**: Upload PDFs and generate summaries along with practice questions.
+- **Adaptive Learning**: Adjust question difficulty based on user performance.
+- **Gamification**: Leaderboards, streaks, daily challenges, and rewards for engagement.
+- **Smart Study Planner**: AI-driven study schedules based on exam dates and revision timelines.
+- **Interactive PDF Markup**: Highlight, annotate, and generate flashcards from PDFs.
+- **Voice Input & Speech Analysis**: Answer questions using voice and receive pronunciation feedback.
+- **Subscription-Based Access**: Paid plans with exclusive learning benefits and discounts for long-term subscribers.
+- **Payment & Invoice Management**: PayPal integration for subscriptions, invoice downloads, and payment tracking.
+
+## Tech Stack
+
+- **Frontend**: EJS, CSS, JavaScript (Chart.js for analytics)
+- **Backend**: Node.js, Express.js
+- **Database**: MongoDB with Mongoose
+- **Authentication**: Google OAuth & JWT
+- **Payment Integration**: PayPal API
+
+## Installation
+
+### Prerequisites
+
+- Node.js & npm installed
+- MongoDB running
+- PayPal developer account (for payment integration)
+- Google Developer Console setup (for OAuth)
+
+### Steps
+
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/your-repo/halal-multiservice.git
+   cd SummarizeitAI
+   ```
+2. Install dependencies:
+   ```bash
+   npm install
+   ```
+3. Configure environment variables:
+   Create a `.env` file in the root directory and add:
+   ```env
+   MONGO_URI=<your_mongodb_connection>
+   SESSION_SECRET=<your_secure_session_secret>
+   JWT_SECRET=<your_secure_jwt_secret>
+   GOOGLE_CLIENT_ID=<your_google_client_id>
+   GOOGLE_CLIENT_SECRET=<your_google_client_secret>
+   GOOGLE_CALLBACK_URL=http://localhost:3000/auth/google/callback
+   PAYPAL_CLIENT_ID=<your_paypal_client_id>
+   PAYPAL_CLIENT_SECRET=<your_paypal_client_secret>
+   ```
+4. Start the server:
+   ```bash
+   npm start
+   ```
+
+## API Routes
+
+### Authentication
+
+- `POST /auth/login` - Login with email/password
+- `GET /auth/google` - Google OAuth login
+- `GET /auth/logout` - Logout user
+
+### AI Features
+
+- `POST /ai/summarize` - Generate a summary from an uploaded PDF
+- `POST /ai/generate-questions` - Generate practice questions
+
+### Payments
+
+- `POST /payment/subscribe` - Subscribe to a plan
+- `GET /payment/history` - View past payments & invoices
+
+### Gamification
+
+- `GET /gamification/leaderboard` - View top users
+- `POST /gamification/streak` - Track learning streaks
+
+## Contributors
+
+- **Your Name** - Lead Developer
+
+## License
+
+This project is licensed under the MIT License.
+
+## Contact
+
+For inquiries, email: [support@halalmultiservice.com](mailto\:support@halalmultiservice.com)
+
+
 
 ## Tech Stack
 - **Backend**: Node.js, Express.js, MongoDB (Mongoose)

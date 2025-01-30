@@ -1,19 +1,29 @@
-<!-- User dashboard -->
+<!-- /views/dashboard.ejs -->
+<%- include('layout') %>
+<h1>Welcome, <%= user.name %>!</h1>
+<p>Your current streak: <%= user.streaks %></p>
 
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <title>Dashboard</title>
-    <link rel="stylesheet" href="/css/styles.css">
-</head>
-<body>
-    <%- include('partials/header') %>
-    <main>
-        <h1>Dashboard</h1>
-        <p>Welcome, <%= user.username %>!</p>
-        <p>Your Subscription: <%= user.subscription.plan || "None" %></p>
-        <a href="/subscription">Manage Subscription</a> | <a href="/auth/logout">Logout</a>
-    </main>
-    <%- include('partials/footer') %>
-</body>
-</html>
+<h2>Your Performance</h2>
+<canvas id="performance-chart" width="400" height="200"></canvas>
+<script>
+    var ctx = document.getElementById('performance-chart').getContext('2d');
+    var chart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: ['Week 1', 'Week 2', 'Week 3', 'Week 4'], // Dynamic data for weeks
+            datasets: [{
+                label: 'Performance',
+                data: [<%= user.performanceData %>], // Dynamic performance data
+                borderColor: 'rgba(75, 192, 192, 1)',
+                fill: false
+            }]
+        },
+        options: {
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+</script>

@@ -1,100 +1,121 @@
-/* General Styles */
-* {
+/* public/css/style.css - Killer UI Styling for SaaS */
+
+/* Global Styles */
+body {
+    font-family: 'Poppins', sans-serif;
+    background: linear-gradient(to right, #1E1E2F, #2C3E50);
+    color: #fff;
     margin: 0;
     padding: 0;
-    box-sizing: border-box;
-    font-family: Arial, sans-serif;
-}
-
-body {
-    background-color: #f4f4f4;
-    color: #333;
-    line-height: 1.6;
-}
-
-/* Header Navigation */
-header {
-    background: #007bff;
-    color: white;
-    padding: 15px 20px;
-    text-align: center;
-}
-
-nav a {
-    color: white;
-    text-decoration: none;
-    margin: 0 15px;
-    font-weight: bold;
-}
-
-nav a:hover {
-    text-decoration: underline;
-}
-
-/* Main Content */
-main {
-    width: 80%;
-    margin: 20px auto;
-    padding: 20px;
-    background: white;
-    border-radius: 8px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-    text-align: center;
-}
-
-/* Buttons */
-button {
-    background: #007bff;
-    color: white;
-    padding: 10px 15px;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    font-size: 16px;
-}
-
-button:hover {
-    background: #0056b3;
-}
-
-/* Forms */
-form {
     display: flex;
     flex-direction: column;
     align-items: center;
+    justify-content: center;
+    min-height: 100vh;
 }
 
-input {
-    width: 80%;
-    padding: 10px;
-    margin: 10px 0;
-    border: 1px solid #ccc;
-    border-radius: 5px;
-}
-
-label {
-    font-weight: bold;
-}
-
-form button {
-    width: 50%;
-}
-
-/* Subscription Page */
-label {
-    display: block;
-    margin: 10px 0;
-    font-size: 18px;
-}
-
-/* Footer */
-footer {
-    margin-top: 20px;
-    background: #007bff;
-    color: white;
+.container {
+    width: 90%;
+    max-width: 1200px;
+    margin: 20px auto;
     text-align: center;
-    padding: 10px;
-    position: relative;
+}
+
+/* Navigation Bar */
+.navbar {
+    background: rgba(255, 255, 255, 0.1);
+    padding: 15px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
     width: 100%;
-    bottom: 0;
+}
+
+.navbar a {
+    color: #FF9800;
+    text-decoration: none;
+    padding: 10px 15px;
+    transition: color 0.3s;
+}
+
+.navbar a:hover {
+    color: #F57C00;
+}
+
+/* Authentication Forms */
+.auth-container, .dashboard-container {
+    background: rgba(255, 255, 255, 0.1);
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
+    text-align: center;
+    width: 400px;
+    margin: 20px auto;
+}
+
+input, select {
+    width: 100%;
+    padding: 10px;
+    margin: 10px 0;
+    border: none;
+    border-radius: 5px;
+    background: rgba(255, 255, 255, 0.2);
+    color: #fff;
+}
+
+button {
+    width: 100%;
+    padding: 10px;
+    border: none;
+    border-radius: 5px;
+    background: #FF9800;
+    color: #fff;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background 0.3s;
+}
+
+button:hover {
+    background: #F57C00;
+}
+
+/* Dashboard Styles */
+.dashboard-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 20px;
+    width: 90%;
+}
+
+.card {
+    background: rgba(255, 255, 255, 0.1);
+    padding: 15px;
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+}
+
+/* Leaderboard & Gamification */
+.leaderboard {
+    background: rgba(0, 255, 150, 0.2);
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(0, 255, 150, 0.3);
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+    .dashboard-container {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Chart.js Dashboard */
+.chart-container {
+    width: 80%;
+    max-width: 800px;
+    margin: auto;
+    padding: 20px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
 }
