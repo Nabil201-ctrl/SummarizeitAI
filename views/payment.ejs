@@ -1,0 +1,14 @@
+<!-- /views/payment.ejs -->
+<%- include('layout') %>
+<h1>Subscription Payment</h1>
+
+<p>Select your subscription plan:</p>
+<form action="/payment/create" method="POST">
+    <label for="plan">Select Plan:</label>
+    <select name="plan" id="plan">
+        <option value="basic">Basic - $5/month</option>
+        <option value="premium">Premium - $15/month</option>
+    </select>
+    <br>
+    <button type="submit">Pay with PayPal</button>
+</form>

@@ -1,50 +1,39 @@
 ////////////////////////////
-//Entry point for the server
+// Entry point for the server
 ////////////////////////////
 
-
-const express = require('express');
-const mongoose = require('mongoose');
-const path = require('path');
 const dotenv = require('dotenv');
-const bodyParser = require('body-parser');
-const session = require('express-session');
-const passport = require('passport');
-
 dotenv.config();
-
+const express = require('express');
+const passport = require('passport');
+const mongoose = require('./Config/db');
+const authRoutes = require('./routes/authRoutes');
+const paymentRoutes = require('./routes/paymentRoutes');
+const aiRoutes = require('./routes/aiRoutes');
+const questionRoutes = require('./routes/questionRoutes'); // Example of another route requiring auth
+const cookieParser = require("cookie-parser");
+const sessionMiddleware = require("./middleware/sessionMiddleware");
+const authMiddleware = require("./middleware/authMiddleware"); // JWT auth middleware
 const app = express();
 
-// Middlewares
-app.use(bodyParser.urlencoded({ extended: false }));
-app.use(bodyParser.json());
-app.use(express.static(path.join(__dirname, 'public')));
-app.set('view engine', 'ejs');
+// Middleware
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+app.use(cookieParser());
+app.use(sessionMiddleware); // Enable sessions
+app.use(passport.initialize());
+app.use(passport.session());
 
 // Routes
-const indexRoutes = require('./routes/index');
-const authRoutes = require('./routes/auth');
-const paymentRoutes = require('./routes/payments');
-const aiRoutes = require('./routes/ai');
-
-// Use Routes
-app.use('/', indexRoutes);
 app.use('/auth', authRoutes);
-app.use('/payments', paymentRoutes);
+app.use('/payment', paymentRoutes);
 app.use('/ai', aiRoutes);
-app.use("/questions", questionRoutes);
-app.use("/questions", questionRoutes);
 
+// Protected Routes (Require authentication)
+app.use('/questions', authMiddleware, questionRoutes); // Example: Secure question routes
 
-// Database connection
-mongoose.connect(process.env.DB_URI, { useNewUrlParser: true, useUnifiedTopology: true })
-  .then(() => console.log('Database connected successfully'))
-  .catch((err) => console.log('Database connection error:', err));
-
-// Starting the server
+// Start server
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
+    console.log(`Server running on port ${PORT}`);
 });
-
-

@@ -1,30 +1,33 @@
-const OpenAI = require("openai");
-require("dotenv").config();
+// /services/questionService.js
+const Question = require('../models/Question');
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY, // Add this key in your .env file
-});
+// Function to generate adaptive questions based on difficulty
+exports.generateQuestions = async (difficulty) => {
+    try {
+        const questions = await Question.find({ difficulty: difficulty });
+        return questions;
+    } catch (error) {
+        throw new Error('Error fetching questions');
+    }
+};
 
-/**
- * Generates practice questions based on the summarized text.
- * @param {string} text - The summarized text extracted from the PDF.
- * @returns {Promise<string[]>} - A list of generated questions.
- */
-async function generateQuestions(text) {
-  try {
-    const prompt = `Generate 5 multiple-choice questions based on the following content:\n\n"${text}"\n\nFormat each question like this:\n\nQ: [Question here]\nA) Option 1\nB) Option 2\nC) Option 3\nD) Option 4\nCorrect Answer: [Correct letter]`;
+// Function to track user's answers and adjust their performance
+exports.trackUserAnswer = async (questionId, userAnswer, correctAnswer) => {
+    try {
+        const question = await Question.findById(questionId);
+        const isCorrect = userAnswer === correctAnswer;
+        
+        if (isCorrect) {
+            // Increase performance level if correct
+            question.userPerformance += 1;
+        } else {
+            // Decrease performance level if wrong
+            question.userPerformance -= 1;
+        }
 
-    const response = await openai.chat.completions.create({
-      model: "gpt-4",
-      messages: [{ role: "system", content: "You are an AI tutor." }, { role: "user", content: prompt }],
-      temperature: 0.7,
-    });
-
-    return response.choices[0].message.content.split("\n\n");
-  } catch (error) {
-    console.error("Error generating questions:", error);
-    throw new Error("Failed to generate questions");
-  }
-}
-
-module.exports = { generateQuestions };
+        await question.save();
+        return { isCorrect, updatedPerformance: question.userPerformance };
+    } catch (error) {
+        throw new Error('Error tracking answer');
+    }
+};
