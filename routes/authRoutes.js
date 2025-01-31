@@ -1,11 +1,12 @@
 // /routes/authRoutes.js
-const express = require('express');
+import express from 'express'; 
 const router = express.Router();
 
-const AuthController = require ('../Controllers/AuthController');
+// /routes/authRoutes.js
+import { googleAuth, googleCallback } from '../Controller/AuthController.js'; // Adjusted for ES Modules
 
 // Google Authentication routes
-router.get('/google', AuthController.googleAuth);
-router.get('/google/callback', AuthController.googleCallback);
+router.get('/google', googleAuth);
+router.get('/google/callback', googleCallback);
 
-module.exports = router;
+export default router;

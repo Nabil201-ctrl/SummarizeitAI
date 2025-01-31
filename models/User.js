@@ -1,13 +1,13 @@
-// /models/User.js
-import mongoose from 'mongoose';
+const mongoose = require("mongoose");
 
 const userSchema = new mongoose.Schema({
-    googleId: { type: String, required: true },
-    username: { type: String, required: true },
-    email: { type: String, required: true },
-    subscriptionStatus: { type: String, enum: ['free', 'premium'], default: 'free' },
-    streaks: { type: Number, default: 0 },
-    leaderboardRank: { type: Number, default: 0 },
+    name: String,
+    email: String,
+    isPremium: { type: Boolean, default: false },
+    premiumExpires: { type: Date, default: null }, // Expiration date for premium users
+    questionHistory: [{ text: String, date: Date, numQuestions: Number }], // Store user history
+    widgetTheme: { type: String, default: "light" }, // Default widget theme
+    aiSettings: { type: Object, default: { difficulty: "medium" } } // AI personalization
 });
 
-module.exports = mongoose.model('User', userSchema);
+export default mongoose.model("User", userSchema);

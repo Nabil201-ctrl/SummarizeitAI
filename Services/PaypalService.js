@@ -1,4 +1,4 @@
-// /services/paymentService.js
+// /services/PaypalService.js
 import paypal from 'paypal-rest-sdk';
 
 // Configure PayPal SDK with environment variables
@@ -9,7 +9,7 @@ paypal.configure({
 });
 
 // Create PayPal payment
-exports.createPayment = (amount) => {
+const createPayment = (amount) => {
     return new Promise((resolve, reject) => {
         const create_payment_json = {
             "intent": "sale",
@@ -40,7 +40,7 @@ exports.createPayment = (amount) => {
 };
 
 // Execute PayPal payment after approval
-exports.executePayment = (paymentId, payerId) => {
+const executePayment = (paymentId, payerId) => {
     return new Promise((resolve, reject) => {
         const execute_payment_json = {
             "payer_id": payerId
@@ -55,3 +55,6 @@ exports.executePayment = (paymentId, payerId) => {
         });
     });
 };
+
+// Default export
+module.exports = { createPayment, executePayment };

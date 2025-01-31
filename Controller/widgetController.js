@@ -2,7 +2,7 @@ const AIService = require("../Services/AIService"); // AI Logic (e.g., OpenAI AP
 const PDFProcessor = require("../Services/pdfService");
 
 // Summarize Text/PDF
-export const summarizeText = async (req, res) => {
+exports.summarizeText = async (req, res) => {
     try {
         let { text, pdfUrl } = req.body;
 
@@ -23,7 +23,7 @@ export const summarizeText = async (req, res) => {
 };
 
 // Generate Practice Questions with User Limits
-export const generateQuestions = async (req, res) => {
+exports.generateQuestions = async (req, res) => {
     try {
         const { text, numQuestions } = req.body;
         const user = req.user;

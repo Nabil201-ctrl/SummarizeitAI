@@ -1,15 +1,12 @@
-///////// Payements Route ///////////
+import express from 'express';
+import { createPayment, executePayment } from '../Controller/PaymentController.js'; // Use named imports
 
-// /routes/paymentRoutes.js
-const express = require('express');
 const router = express.Router();
-import paymentController from '../Controllers/PaymentController';
 
 // PayPal payment creation route
-router.post('/create', paymentController.createPayment);
+router.post('/create', createPayment);
 
 // PayPal payment execution route
-router.post('/execute', paymentController.executePayment);
+router.post('/execute', executePayment);
 
-module.exports = router;
-
+export default router;

@@ -1,7 +1,7 @@
 // /routes/aiRoutes.js
 const express = require('express');
 const router = express.Router();
-import AIcontroller from '../Controllers/AIcontroller';
+import AIcontroller from '../Controller/AIcontroller';
 
 // Route to generate summary from a PDF
 router.post('/summarize', AIcontroller.summarizePDF);
