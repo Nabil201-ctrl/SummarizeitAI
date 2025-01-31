@@ -85,7 +85,7 @@ Halal MultiService is a SaaS platform that provides AI-powered summarization, ad
 
 ## Contributors
 
-- **Your Name** - Lead Developer
+- **Abubakar Nabil** - Lead Developer
 
 ## License
 
