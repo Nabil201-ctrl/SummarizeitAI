@@ -2,6 +2,8 @@
 import bcrypt from "bcryptjs";
 import jwt  from "jsonwebtoken";
 import User from"../models/User";
+const dotenv = require('dotenv');
+dotenv.config();
 exports.registerUser = async (userData) => {
     try {
         const hashedPassword = await bcrypt.hash(userData.password, 10);
