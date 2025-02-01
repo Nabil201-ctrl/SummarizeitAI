@@ -1,4 +1,6 @@
 // /services/PaypalService.js
+const dotenv = require('dotenv');
+dotenv.config()
 import paypal from 'paypal-rest-sdk';
 
 // Configure PayPal SDK with environment variables
