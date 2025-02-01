@@ -10,15 +10,15 @@ exports.sendTrialReminders = async () => {
         } 
     });
 
-    users.forEach(async (user) => {
-        const transporter = nodemailer.createTransport({
-            service: "Gmail",
-            auth: {
-                user: "your-email@gmail.com",
-                pass: "your-password"
-            }
-        });
+    const transporter = nodemailer.createTransport({
+        service: "Gmail",
+        auth: {
+            user: "your-email@gmail.com",
+            pass: "your-password"
+        }
+    });
 
+    users.forEach(async (user) => {
         await transporter.sendMail({
             from: "your-email@gmail.com",
             to: user.email,
@@ -32,16 +32,16 @@ exports.sendTrialReminders = async () => {
 exports.sendDailyStudyReminders = async () => {
     const users = await User.find({ isPremium: true });
 
+    const transporter = nodemailer.createTransport({
+        service: "Gmail",
+        auth: {
+            user: "your-email@gmail.com",
+            pass: "your-password"
+        }
+    });
+
     users.forEach(async (user) => {
         const studyMessage = `Hi ${user.name}, keep up your learning! You’ve completed ${user.questionHistory.length} study sessions. Try a new set of practice questions today!`;
-
-        const transporter = nodemailer.createTransport({
-            service: "Gmail",
-            auth: {
-                user: "your-email@gmail.com",
-                pass: "your-password"
-            }
-        });
 
         await transporter.sendMail({
             from: "your-email@gmail.com",
@@ -50,4 +50,25 @@ exports.sendDailyStudyReminders = async () => {
             text: studyMessage
         });
     });
+};
+
+// Handle answering flashcards and updating user points and levels
+exports.answerFlashcard = async (req, res) => {
+    try {
+        const { isCorrect } = req.body;
+        const user = await User.findById(req.user.id);
+
+        if (!user) return res.status(404).json({ error: "User not found" });
+
+        if (isCorrect) {
+            user.points += 10; // Add 10 points for correct answers
+        }
+
+        user.level = Math.floor(user.points / 100); // Every 100 points = new level
+        await user.save();
+
+        res.json({ points: user.points, level: user.level });
+    } catch (error) {
+        res.status(500).json({ error: "Error updating flashcard answer" });
+    }
 };

@@ -1,10 +1,47 @@
+<style>
+    body {
+        font-family: 'Poppins', sans-serif;
+        background: linear-gradient(135deg, #1f1c2c, #928dab);
+        color: #fff;
+        text-align: center;
+        padding: 20px;
+    }
+    h2, h3 {
+        background: rgba(255, 255, 255, 0.2);
+        padding: 10px;
+        border-radius: 10px;
+        box-shadow: 0px 0px 10px rgba(255, 255, 255, 0.2);
+    }
+    input, select, button {
+        padding: 10px;
+        border-radius: 5px;
+        border: none;
+        margin: 5px;
+    }
+    button {
+        background: #ff6f61;
+        color: white;
+        font-weight: bold;
+        cursor: pointer;
+    }
+    ul {
+        list-style: none;
+        padding: 0;
+    }
+    li {
+        background: rgba(255, 255, 255, 0.2);
+        margin: 5px 0;
+        padding: 10px;
+        border-radius: 5px;
+    }
+</style>
+
 <%- include('../partials/header') %>
 
-<h2>Premium Dashboard</h2>
+<h2>🚀 Premium Dashboard</h2>
 <p>Welcome, <%= user.name %>! Manage and customize your AI experience.</p>
 
-<!-- AI Question Generator Section -->
-<h3>AI Question Generator</h3>
+<h3>🤖 AI Question Generator</h3>
 <label for="numQuestions">Number of Questions:</label>
 <input type="number" id="numQuestions" min="1" max="50" value="10">
 <button onclick="setQuestionCount()">Save</button>
@@ -13,38 +50,34 @@
 function setQuestionCount() {
     let count = document.getElementById("numQuestions").value;
     localStorage.setItem("premiumQuestionCount", count);
-    alert("Question count saved!");
+    alert("🎯 Question count saved!");
 }
 </script>
 
-<!-- Question Analytics Section -->
 <h3>📊 Question Analytics</h3>
 <p>Total Questions Generated: <%= analytics.totalQuestions %></p>
 <p>Total Study Sessions: <%= analytics.sessions %></p>
 
-<!-- Question History Section -->
 <h3>📜 Question History</h3>
 <ul>
     <% questionHistory.forEach(q => { %>
-        <li><%= q.text %> - <%= q.numQuestions %> Questions (<%= q.date %>)</li>
+        <li>📝 <%= q.text %> - <%= q.numQuestions %> Questions (<%= q.date %>)</li>
     <% }) %>
 </ul>
 
-<!-- Widget Customization Section -->
 <h3>🎨 Customize Widget</h3>
 <label for="theme">Widget Theme:</label>
 <select id="theme" onchange="updateSettings()">
-    <option value="light">Light</option>
-    <option value="dark">Dark</option>
+    <option value="light">🌞 Light</option>
+    <option value="dark">🌙 Dark</option>
 </select>
 
-<!-- AI Personalization Section -->
 <h3>🛠 AI Personalization</h3>
 <label for="difficulty">AI Difficulty:</label>
 <select id="difficulty" onchange="updateSettings()">
-    <option value="easy">Easy</option>
-    <option value="medium">Medium</option>
-    <option value="hard">Hard</option>
+    <option value="easy">😌 Easy</option>
+    <option value="medium">😐 Medium</option>
+    <option value="hard">🔥 Hard</option>
 </select>
 
 <script>
@@ -58,25 +91,21 @@ async function updateSettings() {
         body: JSON.stringify({ widgetTheme: theme, aiSettings: { difficulty } })
     });
 
-    alert("Settings updated!");
+    alert("✅ Settings updated!");
 }
 </script>
 
 <h3>📖 AI-Generated Flashcards</h3>
 <div id="flashcard-container"></div>
-
 <script src="/js/flashcards.js"></script>
 
-
-<!-- Study Leaderboard Section -->
 <h3>🏆 Study Leaderboard</h3>
 <ul>
     <% leaderboard.forEach(user => { %>
-        <li><%= user.name %> - <%= user["questionHistory.length"] %> Sessions</li>
+        <li>🥇 <%= user.name %> - <%= user["questionHistory.length"] %> Sessions</li>
     <% }) %>
 </ul>
 
-<!-- AI Study Recommendations Section -->
 <h3>📚 AI Study Recommendations</h3>
 <ul id="study-recommendations"></ul>
 
@@ -84,10 +113,13 @@ async function updateSettings() {
 async function fetchRecommendations() {
     const response = await fetch("/api/recommendations");
     const data = await response.json();
-    document.getElementById("study-recommendations").innerHTML = data.recommendations.map(r => `<li>${r}</li>`).join("");
+    document.getElementById("study-recommendations").innerHTML = data.recommendations.map(r => `<li>📌 ${r}</li>`).join("");
 }
-
 fetchRecommendations();
 </script>
+
+<h3>🔥 Study Streak: <span id="streak-count">0</span> days</h3>
+<h3>🏅 Level: <span id="user-level">1</span></h3>
+<script src="/js/streaks.js"></script>
 
 <%- include('../partials/footer') %>

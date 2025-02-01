@@ -1,6 +1,6 @@
 // /services/PaypalService.js
-const dotenv = require('dotenv');
-dotenv.config()
+import dotenv from 'dotenv';
+dotenv.config();
 import paypal from 'paypal-rest-sdk';
 
 // Configure PayPal SDK with environment variables
@@ -19,7 +19,7 @@ const createPayment = (amount) => {
                 "payment_method": "paypal"
             },
             "redirect_urls": {
-                "return_url": "http://localhost:5000/payment/execute",
+                "return_url": "http://localhost:5000/payment/login",
                 "cancel_url": "http://localhost:5000/payment/cancel"
             },
             "transactions": [{
@@ -59,4 +59,4 @@ const executePayment = (paymentId, payerId) => {
 };
 
 // Default export
-module.exports = { createPayment, executePayment };
+export default { createPayment, executePayment };
