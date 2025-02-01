@@ -3,8 +3,8 @@
 ////////////////////////////
 
 const dotenv = require('dotenv');
+dotenv.config()
 const cors = require('cors');
-dotenv.config();
 const express = require('express');
 const passport = require('passport');
 const mongoose = require('./Config/db');
