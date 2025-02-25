@@ -1,0 +1,63 @@
+<!-- views/deleteFlashcards.ejs -->
+<!-- Renders the Delete Flashcards confirmation page with pulse animation, optimized for performance -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>[App Name] Delete Flashcard</title>
+  <link rel="stylesheet" href="/public/css/main.min.css">
+  <link rel="stylesheet" href="/public/css/darkmode.min.css">
+  <link rel="stylesheet" href="/public/css/animations.min.css">
+</head>
+<body data-theme="<%= user ? user.theme : 'dark' %>">
+  <!-- Header partial with sidebar and theme toggle, auto-login check -->
+  <%- include('partials/header') %>
+
+  <!-- Main Delete Flashcards container with pulse animation on auto-login -->
+  <div class="delete-flashcards-container pulse" <%= user && user.autoLogin ? 'class="fade-in"' : '' %>>
+    <h1>Confirm Deletion</h1>
+    <p>Are you sure you want to delete the flashcard "<%= flashcard.name %>"? This action <%= user.plan === 'Premium' ? 'can be undone within 5 minutes' : 'cannot be undone' %>.</p>
+    <!-- Actions with bounce animation -->
+    <button class="pulse bounce" onclick="confirmDelete('<%= flashcard.id %>')">Confirm</button>
+    <button class="pulse" onclick="cancelDelete()">Cancel</button>
+  </div>
+
+  <!-- Parallax background for depth, minimal resource use -->
+  <div class="parallax-background"></div>
+
+  <!-- Lazy-loaded scripts for performance -->
+  <script src="/public/js/animations.min.js" defer></script>
+  <script src="/public/js/responsive.min.js" defer></script>
+  <script src="/public/js/theme.min.js" defer></script>
+  <script src="/public/js/auth.min.js" defer></script>
+  <script>
+    // Comment: Initializes Delete Flashcards animations, optimized for mobile
+    document.addEventListener('DOMContentLoaded', () => {
+      if ('<%= user && user.autoLogin %>') {
+        document.querySelector('.delete-flashcards-container').classList.add('fade-in');
+        document.querySelector('.parallax-background').classList.add('parallax-animation');
+      }
+    });
+
+    // Comment: Functions for deletion, animated transitions
+    function confirmDelete(id) {
+      // Trigger bounce animation, AJAX call with slide-out
+      document.querySelector('.pulse.bounce').classList.add('pulse');
+      fetch(`/flashcards/delete/${id}`, { method: 'DELETE' })
+        .then(response => response.json())
+        .then(data => {
+          if (data.success) {
+            document.querySelector('.delete-flashcards-container').classList.add('slide-out');
+            setTimeout(() => window.location.href = '/flashcards', 600);
+          }
+        });
+    }
+    function cancelDelete() {
+      // Trigger slide-up animation, redirect with fade-in
+      document.querySelector('.delete-flashcards-container').classList.add('slide-up');
+      setTimeout(() => window.location.href = '/flashcards', 500);
+    }
+  </script>
+</body>
+</html>

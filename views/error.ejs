@@ -1,0 +1,91 @@
+<!-- views/error.ejs -->
+<!-- Renders the Error page with fade-in animation, optimized for performance -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>[App Name] Error</title>
+  <link rel="stylesheet" href="/public/css/main.min.css">
+  <link rel="stylesheet" href="/public/css/darkmode.min.css">
+  <link rel="stylesheet" href="/public/css/animations.min.css">
+</head>
+<body data-theme="<%= user ? user.theme : 'dark' %>">
+  <!-- Header partial with sidebar and theme toggle, auto-login check (optional), review popup trigger -->
+  <%- include('partials/header') %>
+  <!-- Review and Rating popup inclusion -->
+  <%- include('reviewRating') %>
+
+  <!-- Main Error container with fade-in animation -->
+  <div class="error-container fade-in">
+    <h1>Uh-oh! Something Went Wrong</h1>
+    <p class="error-message pulse"><%= message || 'An unexpected error occurred. (Error Code: <%= status || 500 %>)' %></p>
+    <!-- Error details with slide-up animation -->
+    <div class="error-details slide-up">
+      <p>Please try again, or contact support if the issue persists.</p>
+      <p>Email: support@[appname].com</p>
+    </div>
+    <!-- Actions with pulse animation -->
+    <div class="error-actions pulse">
+      <button class="pulse bounce" onclick="goBack()">Go Back</button>
+      <button class="pulse" onclick="goToDashboard()">Go to Dashboard</button>
+      <% if (user && user.plan !== 'Premium') { %>
+        <button class="pulse" onclick="upgradeSupport()">Upgrade for Priority Support</button>
+      <% } %>
+      <!-- PayPal upgrade button for non-Premium users, animated confetti on success -->
+      <% if (user && user.plan !== 'Premium') { %>
+        <button class="pulse spin" id="paypal-upgrade">Upgrade Now with PayPal</button>
+      <% } %>
+    </div>
+  </div>
+
+  <!-- Parallax background for depth, minimal resource use -->
+  <div class="parallax-background"></div>
+
+  <!-- Lazy-loaded scripts for performance -->
+  <script src="/public/js/animations.min.js" defer></script>
+  <script src="/public/js/responsive.min.js" defer></script>
+  <script src="/public/js/theme.min.js" defer></script>
+  <script src="/public/js/auth.min.js" defer></script>
+  <script src="/public/js/review.min.js" defer></script>
+  <script>
+    // Comment: Initializes Error animations, optimized for mobile, triggers review popup
+    document.addEventListener('DOMContentLoaded', () => {
+      // Handle action animations
+      document.querySelectorAll('.pulse, .pulse-on-hover').forEach(el => {
+        el.addEventListener('mouseover', () => el.classList.add('pulse'));
+        el.addEventListener('mouseout', () => el.classList.remove('pulse'));
+      });
+
+      // Check for review popup (triggered after actions, not errors for this case)
+      fetch('/review/check')
+        .then(response => response.json())
+        .then(data => {
+          if (data.showPopup) {
+            document.querySelector('.review-modal').style.display = 'block';
+            document.querySelector('.review-modal').classList.add('pop');
+          }
+        });
+    });
+
+    // Comment: Functions for error actions, animated transitions
+    function goBack() {
+      // Comment: Triggers slide-up animation, goes back with fade-in
+      document.querySelector('.error-container').classList.add('slide-up');
+      setTimeout(() => window.history.back(), 500);
+    }
+
+    function goToDashboard() {
+      // Comment: Triggers pulse animation, redirects to Dashboard with fade-in
+      document.querySelector('.pulse.bounce').classList.add('pulse');
+      window.location.href = '/dashboard';
+    }
+
+    function upgradeSupport() {
+      // Comment: Triggers spin animation, redirects to PayPal for Premium
+      document.querySelector('.pulse').classList.add('spin');
+      window.location.href = '/paypal/subscribe?plan=Premium';
+    }
+  </script>
+</body>
+</html>

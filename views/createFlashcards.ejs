@@ -1,0 +1,96 @@
+<!-- views/createFlashcards.ejs -->
+<!-- Renders the Create Flashcards page with bounce animation, optimized for performance -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>[App Name] Create Flashcards</title>
+  <link rel="stylesheet" href="/public/css/main.min.css">
+  <link rel="stylesheet" href="/public/css/darkmode.min.css">
+  <link rel="stylesheet" href="/public/css/animations.min.css">
+</head>
+<body data-theme="<%= user ? user.theme : 'dark' %>">
+  <!-- Header partial with sidebar and theme toggle, auto-login check -->
+  <%- include('partials/header') %>
+
+  <!-- Main Create Flashcards container with bounce animation on auto-login -->
+  <div class="create-flashcards-container bounce" <%= user && user.autoLogin ? 'class="fade-in"' : '' %>>
+    <h1>Create New Flashcard</h1>
+    <!-- Flashcard form with pulse animation -->
+    <form action="/flashcards/create" method="POST" class="flashcard-form">
+      <input type="text" name="name" placeholder="Flashcard Name" class="pulse-on-focus" required>
+      <textarea name="front" placeholder="Front Content" class="pulse-on-focus" required></textarea>
+      <textarea name="back" placeholder="Back Content" class="pulse-on-focus" required></textarea>
+      <input type="text" name="category" placeholder="Category (e.g., Science)" class="pulse-on-focus">
+      <!-- Upload file for Premium users -->
+      <% if (user.plan === 'Premium') { %>
+        <input type="file" name="file" accept="image/*,application/pdf" class="pulse-on-focus">
+      <% } else { %>
+        <p>Upload images/PDFs with Premium. <button class="pulse" onclick="upgradePlan()">Upgrade</button></p>
+      <% } %>
+      <!-- Customization for Premium users -->
+      <% if (user.plan === 'Premium') { %>
+        <select name="background" class="pulse-on-focus">
+          <option value="dark-grey">Dark Grey</option>
+          <option value="light-grey">Light Grey</option>
+        </select>
+        <select name="font" class="pulse-on-focus">
+          <option value="arial">Arial</option>
+          <option value="times">Times New Roman</option>
+        </select>
+        <select name="animation" class="pulse-on-focus">
+          <option value="none">None</option>
+          <option value="fade">Fade</option>
+          <option value="slide">Slide</option>
+        </select>
+      <% } %>
+      <button type="submit" class="pulse bounce">Save Flashcard</button>
+    </form>
+    <!-- Plan limit warning with shimmer animation -->
+    <% if (user.plan !== 'Premium' && user.flashcards && user.flashcards.length >= (user.plan === 'Basic' ? 180 : 50)) { %>
+      <p class="limit-warning shimmer">Limit Reached: <%= user.plan === 'Basic' ? '180' : '50' %>/<%= user.plan === 'Basic' ? '180' : '50' %> Flashcards Used. <button class="pulse" onclick="upgradePlan()">Upgrade</button></p>
+    <% } %>
+    <!-- PayPal upgrade button for Freemium/Basic, animated confetti on success -->
+    <% if (user.plan !== 'Premium') { %>
+      <button class="pulse" onclick="upgradeFlashcards()">Upgrade Flashcards with PayPal</button>
+    <% } %>
+  </div>
+
+  <!-- Parallax background for depth, minimal resource use -->
+  <div class="parallax-background"></div>
+
+  <!-- Lazy-loaded scripts for performance -->
+  <script src="/public/js/animations.min.js" defer></script>
+  <script src="/public/js/responsive.min.js" defer></script>
+  <script src="/public/js/theme.min.js" defer></script>
+  <script src="/public/js/auth.min.js" defer></script>
+  <script>
+    // Comment: Initializes Create Flashcards animations, optimized for mobile
+    document.addEventListener('DOMContentLoaded', () => {
+      if ('<%= user && user.autoLogin %>') {
+        document.querySelector('.create-flashcards-container').classList.add('fade-in');
+        document.querySelector('.parallax-background').classList.add('parallax-animation');
+      }
+      // Handle form animations
+      document.querySelectorAll('.pulse-on-focus').forEach(el => {
+        el.addEventListener('focus', () => el.classList.add('pulse'));
+        el.addEventListener('blur', () => el.classList.remove('pulse'));
+      });
+    });
+
+    // Comment: Functions for upgrades, animated transitions
+    function upgradePlan() {
+      // Comment: Triggers pulse animation, redirect to Settings for PayPal
+      document.querySelector('.pulse').classList.add('pulse');
+      window.location.href = '/settings';
+    }
+    function upgradeFlashcards() {
+      // Comment: Triggers spin animation, PayPal redirect with confetti
+      document.querySelector('.pulse').classList.add('spin');
+      // PayPal integration (to be implemented in paymentService.js)
+      window.location.href = '/paypal/upgrade-flashcards';
+    }
+  </script>
+</body>
+</html>

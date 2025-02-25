@@ -1,0 +1,221 @@
+<!-- views/onboarding.ejs -->
+<!-- Renders the Onboarding page with slide-in animation, optimized for performance -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>[App Name] Onboarding</title>
+  <link rel="stylesheet" href="/public/css/main.min.css">
+  <link rel="stylesheet" href="/public/css/darkmode.min.css">
+  <link rel="stylesheet" href="/public/css/animations.min.css">
+</head>
+<body data-theme="<%= user ? user.theme : 'dark' %>">
+  <!-- Minimal header without sidebar during onboarding, auto-login check, review popup trigger -->
+  <header class="onboarding-header fade-in">
+    <h1>[App Name] Get Started</h1>
+    <button class="pulse" onclick="skipOnboarding()">Skip</button>
+  </header>
+  <!-- Review and Rating popup inclusion -->
+  <%- include('reviewRating') %>
+
+  <!-- Main Onboarding container with slide-in animation on auto-login -->
+  <div class="onboarding-container slide-in" <%= user && user.autoLogin ? 'class="fade-in"' : '' %>>
+    <!-- Progress bar with grow animation -->
+    <div class="progress-bar">
+      <div class="progress-fill" style="--progress: <%= (currentStep / totalSteps) * 100 %>%;"></div>
+    </div>
+
+    <!-- Onboarding steps with bounce animation -->
+    <div class="onboarding-steps">
+      <% steps.forEach(step => { %>
+        <div class="step <%= currentStep === step.number ? 'active bounce' : '' %> <%= currentStep > step.number ? 'completed' : '' %>">
+          <h2><%= step.title %></h2>
+          <p><%= step.content %></p>
+          <% if (step.action) { %>
+            <% if (step.action.type === 'upload') { %>
+              <input type="file" accept="text/*,application/pdf" class="pulse-on-focus" onchange="handleUpload(this.files)">
+              <button class="pulse" onclick="nextStep()">Next</button>
+            <% } else if (step.action.type === 'generate') { %>
+              <button class="pulse" onclick="generate<%= step.action.target.charAt(0).toUpperCase() + step.action.target.slice(1) %>()">Generate <%= step.action.target %></button>
+              <button class="pulse" onclick="nextStep()">Next</button>
+            <% } else if (step.action.type === 'link') { %>
+              <button class="pulse" onclick="window.location.href='<%= step.action.url %>'; nextStep()">Go to <%= step.action.text %></button>
+            <% } %>
+          <% } %>
+        </div>
+      <% }); %>
+    </div>
+  </div>
+
+  <!-- Parallax background for depth, minimal resource use -->
+  <div class="parallax-background"></div>
+
+  <!-- Lazy-loaded scripts for performance -->
+  <script src="/public/js/animations.min.js" defer></script>
+  <script src="/public/js/responsive.min.js" defer></script>
+  <script src="/public/js/theme.min.js" defer></script>
+  <script src="/public/js/auth.min.js" defer></script>
+  <script src="/public/js/review.min.js" defer></script>
+  <script>
+    // Comment: Initializes Onboarding animations, optimized for mobile, triggers review popup
+    document.addEventListener('DOMContentLoaded', () => {
+      if ('<%= user && user.autoLogin %>') {
+        document.querySelector('.onboarding-container').classList.add('fade-in');
+        document.querySelector('.parallax-background').classList.add('parallax-animation');
+      }
+      // Handle step animations
+      document.querySelectorAll('.pulse, .pulse-on-focus').forEach(el => {
+        el.addEventListener('mouseover', () => el.classList.add('pulse'));
+        el.addEventListener('mouseout', () => el.classList.remove('pulse'));
+        el.addEventListener('focus', () => el.classList.add('pulse'));
+        el.addEventListener('blur', () => el.classList.remove('pulse'));
+      });
+
+      // Check for review popup
+      fetch('/review/check')
+        .then(response => response.json())
+        .then(data => {
+          if (data.showPopup) {
+            document.querySelector('.review-modal').style.display = 'block';
+            document.querySelector('.review-modal').classList.add('pop');
+          }
+        });
+    });
+
+    // Comment: Global variables for onboarding state
+    let currentStep = <%= currentStep || 1 %>;
+    const totalSteps = <%= steps.length %>;
+
+    // Comment: Functions for onboarding actions, animated transitions
+    function nextStep() {
+      // Comment: Triggers bounce animation, advances to next step with slide-in
+      document.querySelector('.step.active').classList.add('bounce');
+      if (currentStep < totalSteps) {
+        currentStep++;
+        fetch('/onboarding/next', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ step: currentStep })
+        }).then(response => response.json()).then(data => {
+          if (data.success) {
+            window.location.reload();
+          }
+        });
+      } else {
+        completeOnboarding();
+      }
+    }
+
+    function skipOnboarding() {
+      // Comment: Triggers slide-out animation, skips onboarding with fade
+      document.querySelector('.onboarding-container').classList.add('slide-out');
+      setTimeout(() => {
+        fetch('/onboarding/skip', { method: 'POST' })
+          .then(response => response.json())
+          .then(data => {
+            if (data.success) window.location.href = '/dashboard';
+          });
+      }, 500);
+    }
+
+    function completeOnboarding() {
+      // Comment: Triggers confetti animation, completes onboarding with pop
+      document.querySelector('.onboarding-container').classList.add('pop');
+      if ('<%= user.plan === 'Premium' %>') {
+        document.querySelector('.onboarding-container').innerHTML += '<div class="confetti" style="display: block;"></div>';
+        document.querySelector('.confetti').classList.add('confetti-animation');
+        setTimeout(() => document.querySelector('.confetti').style.display = 'none', 3000);
+      }
+      fetch('/onboarding/complete', { method: 'POST' })
+        .then(response => response.json())
+        .then(data => {
+          if (data.success) window.location.href = '/dashboard';
+        });
+    }
+
+    function handleUpload(files) {
+      // Comment: Triggers spin animation, uploads file with slide-up
+      document.querySelector('.pulse-on-focus').classList.add('spin');
+      const formData = new FormData();
+      formData.append('file', files[0]);
+      fetch('/notes/upload', {
+        method: 'POST',
+        body: formData
+      }).then(response => response.json()).then(data => {
+        if (data.success) {
+          document.querySelector('.onboarding-container').classList.add('slide-up');
+          nextStep();
+        }
+      });
+    }
+
+    function generateSummary() {
+      // Comment: Triggers spin animation, generates summary with pop
+      document.querySelector('.pulse').classList.add('spin');
+      fetch('/summarized-pdf/generate', { method: 'POST' })
+        .then(response => response.json())
+        .then(data => {
+          if (data.success) {
+            document.querySelector('.onboarding-container').classList.add('pop');
+            nextStep();
+          }
+        });
+    }
+
+    function generateQuestions() {
+      // Comment: Triggers spin animation, generates questions with pop
+      document.querySelector('.pulse').classList.add('spin');
+      fetch('/questions/generate', { method: 'POST' })
+        .then(response => response.json())
+        .then(data => {
+          if (data.success) {
+            document.querySelector('.onboarding-container').classList.add('pop');
+            nextStep();
+          }
+        });
+    }
+
+    // Comment: Conditional steps based on plan
+    <% if (user.plan === 'Basic') { %>
+      function exploreFlashcards() {
+        // Comment: Triggers bounce animation, links to Flashcards with slide-up
+        document.querySelector('.pulse').classList.add('bounce');
+        window.location.href = '/flashcards';
+        nextStep();
+      }
+      function syncCalendar() {
+        // Comment: Triggers spin animation, syncs calendar with pop
+        document.querySelector('.pulse').classList.add('spin');
+        fetch('/settings/sync-calendar', { method: 'POST' })
+          .then(response => response.json())
+          .then(data => {
+            if (data.success) {
+              document.querySelector('.onboarding-container').classList.add('pop');
+              nextStep();
+            }
+          });
+      }
+    <% } else if (user.plan === 'Premium') { %>
+      function unlockDeepLearning() {
+        // Comment: Triggers confetti animation, links to Deep Learning with pop
+        document.querySelector('.pulse').classList.add('bounce');
+        window.location.href = '/deep-learning';
+        nextStep();
+      }
+      function collaborateWithTeams() {
+        // Comment: Triggers spin animation, links to Team Collaboration with slide-up
+        document.querySelector('.pulse').classList.add('spin');
+        window.location.href = '/team';
+        nextStep();
+      }
+      function personalizeTheme() {
+        // Comment: Triggers flip animation, links to Settings with pop
+        document.querySelector('.pulse').classList.add('flip');
+        window.location.href = '/settings';
+        nextStep();
+      }
+    <% } %>
+  </script>
+</body>
+</html>

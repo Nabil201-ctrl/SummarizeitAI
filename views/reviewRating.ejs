@@ -1,0 +1,97 @@
+<!-- views/reviewRating.ejs -->
+<!-- Renders the Review and Rating popup with pop animation, optimized for performance -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>[App Name] Review & Rating</title>
+  <link rel="stylesheet" href="/public/css/main.min.css">
+  <link rel="stylesheet" href="/public/css/darkmode.min.css">
+  <link rel="stylesheet" href="/public/css/animations.min.css">
+</head>
+<body data-theme="<%= user ? user.theme : 'dark' %>">
+  <!-- Review and Rating popup modal with pop animation -->
+  <div class="review-modal pop" style="display: none;">
+    <h2>How’s [App Name] Treating You?</h2>
+    <!-- Star rating with pulse animation -->
+    <div class="star-rating pulse">
+      <% for (let i = 1; i <= 5; i++) { %>
+        <span class="star <%= rating >= i ? 'filled' : '' %>" data-value="<%= i %>">★</span>
+      <% } %>
+    </div>
+    <!-- Feedback textarea with pulse animation -->
+    <textarea placeholder="Share your thoughts..." class="pulse-on-focus" id="feedback"></textarea>
+    <!-- Submit and dismiss buttons with bounce animation -->
+    <div class="modal-actions">
+      <button class="pulse bounce" onclick="submitReview()">Submit Review</button>
+      <button class="pulse" onclick="dismissReview()">Dismiss</button>
+    </div>
+    <!-- Confetti animation on submit (Premium only) -->
+    <% if (user.plan === 'Premium') { %>
+      <div class="confetti" style="display: none;"></div>
+    <% } %>
+  </div>
+
+  <!-- Lazy-loaded scripts for performance -->
+  <script src="/public/js/animations.min.js" defer></script>
+  <script src="/public/js/responsive.min.js" defer></script>
+  <script src="/public/js/theme.min.js" defer></script>
+  <script src="/public/js/review.min.js" defer></script>
+  <script>
+    // Comment: Initializes Review and Rating popup, optimized for mobile
+    document.addEventListener('DOMContentLoaded', () => {
+      // Show popup after 3 logins or 5 actions (simplified logic)
+      const loginCount = <%= user.loginCount || 0 %>;
+      const actionCount = <%= user.actionCount || 0 %>;
+      if ((loginCount >= 3 || actionCount >= 5) && !user.reviewed) {
+        document.querySelector('.review-modal').style.display = 'block';
+        document.querySelector('.review-modal').classList.add('pop');
+      }
+
+      // Star rating interaction with pulse animation
+      document.querySelectorAll('.star').forEach(star => {
+        star.addEventListener('click', () => {
+          const value = star.getAttribute('data-value');
+          document.querySelectorAll('.star').forEach(s => s.classList.remove('filled'));
+          for (let i = 1; i <= value; i++) {
+            document.querySelector(`.star[data-value="${i}"]`).classList.add('filled');
+          }
+          document.getElementById('rating').value = value;
+          star.classList.add('pulse');
+          setTimeout(() => star.classList.remove('pulse'), 1000);
+        });
+      });
+    });
+
+    // Comment: Functions for review actions, animated transitions
+    function submitReview() {
+      // Comment: Triggers bounce animation, submits review with confetti (Premium)
+      document.querySelector('.pulse.bounce').classList.add('pulse');
+      const rating = document.getElementById('rating').value || 0;
+      const feedback = document.getElementById('feedback').value || '';
+      fetch('/review/submit', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ rating, feedback })
+      }).then(response => response.json()).then(data => {
+        if (data.success) {
+          document.querySelector('.review-modal').classList.add('slide-out');
+          setTimeout(() => document.querySelector('.review-modal').style.display = 'none', 500);
+          if ('<%= user.plan === 'Premium' %>') {
+            document.querySelector('.confetti').style.display = 'block';
+            document.querySelector('.confetti').classList.add('confetti-animation');
+            setTimeout(() => document.querySelector('.confetti').style.display = 'none', 3000);
+          }
+        }
+      });
+    }
+
+    function dismissReview() {
+      // Comment: Triggers slide-out animation, hides popup
+      document.querySelector('.review-modal').classList.add('slide-out');
+      setTimeout(() => document.querySelector('.review-modal').style.display = 'none', 500);
+    }
+  </script>
+</body>
+</html>

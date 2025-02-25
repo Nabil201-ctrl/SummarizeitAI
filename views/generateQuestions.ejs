@@ -1,0 +1,194 @@
+<!-- views/generateQuestions.ejs -->
+<!-- Renders the Generate Questions page with slide-up animation, optimized for performance -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>[App Name] Generate Questions</title>
+  <link rel="stylesheet" href="/public/css/main.min.css">
+  <link rel="stylesheet" href="/public/css/darkmode.min.css">
+  <link rel="stylesheet" href="/public/css/animations.min.css">
+</head>
+<body data-theme="<%= user ? user.theme : 'dark' %>">
+  <!-- Header partial with sidebar and theme toggle, auto-login check -->
+  <%- include('partials/header') %>
+
+  <!-- Main Generate Questions container with slide-up animation on auto-login -->
+  <div class="generate-questions-container slide-up" <%= user && user.autoLogin ? 'class="fade-in"' : '' %>>
+    <h1>Generate Questions</h1>
+    <!-- Tabs with pulse animation -->
+    <div class="tabs">
+      <button class="tab-button pulse <%= activeTab === 'generate' ? 'active' : '' %>" onclick="switchTab('generate')">Generate</button>
+      <button class="tab-button pulse <%= activeTab === 'test' ? 'active' : '' %>" onclick="switchTab('test')">Test</button>
+    </div>
+
+    <!-- Generate Tab (Default) -->
+    <div class="tab-content <%= activeTab === 'generate' ? 'active' : '' %> slide-up">
+      <h2>Create New Questions</h2>
+      <!-- Form with pulse animation -->
+      <form action="/questions/generate" method="POST" class="question-form">
+        <select name="source" class="pulse-on-focus" required>
+          <option value="notes">Notes</option>
+          <option value="summarized">Summarized Notes</option>
+          <option value="made">Made Notes</option>
+        </select>
+        <select name="type" class="pulse-on-focus" required>
+          <% if (user.plan === 'Premium') { %>
+            <option value="short">Short Answer</option>
+            <option value="mcq">Multiple Choice</option>
+            <option value="truefalse">True/False</option>
+            <option value="fillblank">Fill in the Blank</option>
+          <% } else { %>
+            <option value="short">Short Answer</option>
+            <% if (user.plan === 'Basic') { %>
+              <option value="mcq">Multiple Choice</option>
+              <option value="truefalse">True/False</option>
+            <% } %>
+          <% } %>
+        </select>
+        <input type="text" name="category" placeholder="Category (e.g., Science)" class="pulse-on-focus">
+        <button type="submit" class="pulse bounce">Generate Questions</button>
+      </form>
+      <!-- Plan limit warning with shimmer animation -->
+      <% if (user.plan !== 'Premium' && user.questionsGenerated >= (user.plan === 'Basic' ? 100 : 20)) { %>
+        <p class="limit-warning shimmer">Limit Reached: <%= user.plan === 'Basic' ? '100' : '20' %>/<%= user.plan === 'Basic' ? '100' : '20' %> Questions Used. <button class="pulse" onclick="upgradePlan()">Upgrade</button></p>
+      <% } %>
+      <!-- PayPal upgrade button for Freemium/Basic, animated confetti on success -->
+      <% if (user.plan !== 'Premium') { %>
+        <button class="pulse" onclick="upgradeQuestions()">Upgrade Questions with PayPal</button>
+      <% } %>
+    </div>
+
+    <!-- Test Tab -->
+    <div class="tab-content <%= activeTab === 'test' ? 'active' : '' %> slide-up">
+      <h2>Test Your Knowledge</h2>
+      <% if (user.currentQuestions && user.currentQuestions.length > 0) { %>
+        <% user.currentQuestions.forEach(question => { %>
+          <div class="question-item flip" style="background: var(--background); color: var(--text);">
+            <h3><%= question.text %></h3>
+            <% if (question.type === 'mcq') { %>
+              <% question.options.forEach(option => { %>
+                <label><input type="radio" name="answer-<%= question.id %>" value="<%= option %>"> <%= option %></label>
+              <% }); %>
+            <% } else if (question.type === 'truefalse') { %>
+              <label><input type="radio" name="answer-<%= question.id %>" value="true"> True</label>
+              <label><input type="radio" name="answer-<%= question.id %>" value="false"> False</label>
+            <% } else if (question.type === 'fillblank') { %>
+              <input type="text" placeholder="Fill in the blank" class="pulse-on-focus">
+            <% } else { %>
+              <input type="text" placeholder="Your answer" class="pulse-on-focus">
+            <% } %>
+            <button class="pulse" onclick="submitAnswer('<%= question.id %>')">Submit</button>
+            <!-- Feedback with pop animation -->
+            <p class="feedback <%= question.feedback ? (question.feedback.correct ? 'correct pop' : 'incorrect pop') : '' %>">
+              <%= question.feedback ? (question.feedback.correct ? 'Correct!' : 'Incorrect – Try Again') : '' %>
+            </p>
+          </div>
+        <% }); %>
+        <button class="pulse" onclick="submitTest()">Submit All</button>
+        <button class="pulse" onclick="retryTest()">Retry</button>
+      <% } else { %>
+        <p class="no-questions pulse">No questions generated. <button class="pulse" onclick="generateNew()">Generate Now</button></p>
+      <% } %>
+    </div>
+  </div>
+
+  <!-- Parallax background for depth, minimal resource use -->
+  <div class="parallax-background"></div>
+
+  <!-- Lazy-loaded scripts for performance -->
+  <script src="/public/js/animations.min.js" defer></script>
+  <script src="/public/js/responsive.min.js" defer></script>
+  <script src="/public/js/theme.min.js" defer></script>
+  <script src="/public/js/auth.min.js" defer></script>
+  <script>
+    // Comment: Initializes Generate Questions animations, optimized for mobile
+    document.addEventListener('DOMContentLoaded', () => {
+      if ('<%= user && user.autoLogin %>') {
+        document.querySelector('.generate-questions-container').classList.add('fade-in');
+        document.querySelector('.parallax-background').classList.add('parallax-animation');
+      }
+      // Handle tab and form animations
+      document.querySelectorAll('.pulse, .pulse-on-focus').forEach(el => {
+        el.addEventListener('mouseover', () => el.classList.add('pulse'));
+        el.addEventListener('mouseout', () => el.classList.remove('pulse'));
+        el.addEventListener('focus', () => el.classList.add('pulse'));
+        el.addEventListener('blur', () => el.classList.remove('pulse'));
+      });
+      // Set default tab
+      let activeTab = 'generate';
+      switchTab(activeTab);
+    });
+
+    // Comment: Functions for question actions, animated transitions
+    function switchTab(tab) {
+      // Comment: Switches tabs with slide-up animation, optimized for performance
+      document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+      document.querySelectorAll('.tab-button').forEach(button => button.classList.remove('active'));
+      document.querySelector(`.tab-content.${tab}`).classList.add('active', 'slide-up');
+      document.querySelector(`.tab-button.${tab}`).classList.add('active');
+      activeTab = tab;
+    }
+
+    function generateNew() {
+      // Comment: Triggers spin animation, generates new questions with pop
+      document.querySelector('.pulse.bounce').classList.add('spin');
+      document.querySelector('.question-form').submit();
+    }
+
+    function submitAnswer(id) {
+      // Comment: Triggers pulse animation, submits answer with pop feedback
+      document.querySelector(`.question-item[data-id="${id}"] .pulse`).classList.add('pulse');
+      const answer = document.querySelector(`input[name="answer-${id}"]:checked`)?.value || 
+                     document.querySelector(`input[name="answer-${id}"]`)?.value;
+      fetch(`/questions/submit/${id}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ answer })
+      }).then(response => response.json()).then(data => {
+        if (data.success) {
+          document.querySelector(`.question-item[data-id="${id}"] .feedback`).innerText = 
+            data.correct ? 'Correct!' : 'Incorrect – Try Again';
+          document.querySelector(`.question-item[data-id="${id}"] .feedback`).classList.add(
+            data.correct ? 'correct pop' : 'incorrect pop'
+          );
+        }
+      });
+    }
+
+    function submitTest() {
+      // Comment: Triggers bounce animation, submits all answers with pop
+      document.querySelector('.pulse').classList.add('bounce');
+      // AJAX call to submit all, slide-up on success
+      fetch('/questions/submit-all', { method: 'POST' })
+        .then(response => response.json())
+        .then(data => {
+          if (data.success) {
+            alert(`Test Submitted: ${data.score}% Correct`);
+            document.querySelector('.generate-questions-container').classList.add('slide-up');
+          }
+        });
+    }
+
+    function retryTest() {
+      // Comment: Triggers spin animation, retries test with slide-up
+      document.querySelector('.pulse').classList.add('spin');
+      window.location.href = '/questions/generate';
+    }
+
+    function upgradePlan() {
+      // Comment: Triggers pulse animation, redirect to Settings for PayPal
+      document.querySelector('.pulse').classList.add('pulse');
+      window.location.href = '/settings';
+    }
+
+    function upgradeQuestions() {
+      // Comment: Triggers spin animation, PayPal redirect with confetti
+      document.querySelector('.pulse').classList.add('spin');
+      // PayPal integration (to be implemented in paymentService.js)
+      window.location.href = '/paypal/upgrade-questions';
+    }
+  </script>
+</body>
+</html>

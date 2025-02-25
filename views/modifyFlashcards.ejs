@@ -1,0 +1,98 @@
+<!-- views/modifyFlashcards.ejs -->
+<!-- Renders the Modify Flashcards page with flip animation, optimized for performance -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>[App Name] Modify Flashcards</title>
+  <link rel="stylesheet" href="/public/css/main.min.css">
+  <link rel="stylesheet" href="/public/css/darkmode.min.css">
+  <link rel="stylesheet" href="/public/css/animations.min.css">
+</head>
+<body data-theme="<%= user ? user.theme : 'dark' %>">
+  <!-- Header partial with sidebar and theme toggle, auto-login check -->
+  <%- include('partials/header') %>
+
+  <!-- Main Modify Flashcards container with flip animation on auto-login -->
+  <div class="modify-flashcards-container flip" <%= user && user.autoLogin ? 'class="fade-in"' : '' %>>
+    <h1>Modify Flashcard: <%= flashcard.name %></h1>
+    <!-- Flashcard form with pulse animation -->
+    <form action="/flashcards/modify/<%= flashcard.id %>" method="POST" class="flashcard-form">
+      <input type="text" name="name" value="<%= flashcard.name %>" class="pulse-on-focus" required>
+      <textarea name="front" class="pulse-on-focus" required><%= flashcard.front %></textarea>
+      <textarea name="back" class="pulse-on-focus" required><%= flashcard.back %></textarea>
+      <input type="text" name="category" value="<%= flashcard.category %>" class="pulse-on-focus">
+      <!-- Upload file for Premium users -->
+      <% if (user.plan === 'Premium') { %>
+        <input type="file" name="file" accept="image/*,application/pdf" class="pulse-on-focus">
+      <% } else { %>
+        <p>Upload images/PDFs with Premium. <button class="pulse" onclick="upgradePlan()">Upgrade</button></p>
+      <% } %>
+      <!-- Customization for Premium users -->
+      <% if (user.plan === 'Premium') { %>
+        <select name="background" class="pulse-on-focus">
+          <option value="dark-grey" <%= flashcard.background === 'dark-grey' ? 'selected' : '' %>>Dark Grey</option>
+          <option value="light-grey" <%= flashcard.background === 'light-grey' ? 'selected' : '' %>>Light Grey</option>
+        </select>
+        <select name="font" class="pulse-on-focus">
+          <option value="arial" <%= flashcard.font === 'arial' ? 'selected' : '' %>>Arial</option>
+          <option value="times" <%= flashcard.font === 'times' ? 'selected' : '' %>>Times New Roman</option>
+        </select>
+        <select name="animation" class="pulse-on-focus">
+          <option value="none" <%= flashcard.animation === 'none' ? 'selected' : '' %>>None</option>
+          <option value="fade" <%= flashcard.animation === 'fade' ? 'selected' : '' %>>Fade</option>
+          <option value="slide" <%= flashcard.animation === 'slide' ? 'selected' : '' %>>Slide</option>
+        </select>
+      <% } %>
+      <button type="submit" class="pulse bounce">Save Changes</button>
+      <button type="button" class="pulse" onclick="deleteFlashcard('<%= flashcard.id %>')">Delete</button>
+    </form>
+  </div>
+
+  <!-- Parallax background for depth, minimal resource use -->
+  <div class="parallax-background"></div>
+
+  <!-- Lazy-loaded scripts for performance -->
+  <script src="/public/js/animations.min.js" defer></script>
+  <script src="/public/js/responsive.min.js" defer></script>
+  <script src="/public/js/theme.min.js" defer></script>
+  <script src="/public/js/auth.min.js" defer></script>
+  <script>
+    // Comment: Initializes Modify Flashcards animations, optimized for mobile
+    document.addEventListener('DOMContentLoaded', () => {
+      if ('<%= user && user.autoLogin %>') {
+        document.querySelector('.modify-flashcards-container').classList.add('fade-in');
+        document.querySelector('.parallax-background').classList.add('parallax-animation');
+      }
+      // Handle form animations
+      document.querySelectorAll('.pulse-on-focus').forEach(el => {
+        el.addEventListener('focus', () => el.classList.add('pulse'));
+        el.addEventListener('blur', () => el.classList.remove('pulse'));
+      });
+    });
+
+    // Comment: Functions for flashcard actions, animated transitions
+    function deleteFlashcard(id) {
+      // Trigger pulse animation, confirm with bounce
+      if (confirm('Delete this flashcard?')) {
+        document.querySelector('.pulse').classList.add('pulse');
+        // AJAX call to delete, slide-out on success
+        fetch(`/flashcards/delete/${id}`, { method: 'DELETE' })
+          .then(response => response.json())
+          .then(data => {
+            if (data.success) {
+              document.querySelector('.modify-flashcards-container').classList.add('slide-out');
+              setTimeout(() => window.location.href = '/flashcards', 600);
+            }
+          });
+      }
+    }
+    function upgradePlan() {
+      // Comment: Triggers pulse animation, redirect to Settings for PayPal
+      document.querySelector('.pulse').classList.add('pulse');
+      window.location.href = '/settings';
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,141 @@
+<!-- views/home.ejs -->
+<!-- Renders the Home page with fade-in animation, optimized for performance -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>[App Name] Home</title>
+  <link rel="stylesheet" href="/public/css/main.min.css">
+  <link rel="stylesheet" href="/public/css/darkmode.min.css">
+  <link rel="stylesheet" href="/public/css/animations.min.css">
+</head>
+<body data-theme="<%= user ? user.theme : 'dark' %>">
+  <!-- Header partial with sidebar and theme toggle, auto-login check, review popup trigger -->
+  <%- include('partials/header') %>
+  <!-- Review and Rating popup inclusion -->
+  <%- include('reviewRating') %>
+
+  <!-- Main Home container with fade-in animation on auto-login -->
+  <div class="home-container fade-in" <%= user && user.autoLogin ? 'class="slide-up"' : '' %>>
+    <h1>Welcome to [App Name], <%= user ? user.name : 'Guest' %>!</h1>
+    <!-- Quick stats grid with slide-up animation, responsive layout -->
+    <div class="quick-stats">
+      <% if (user) { %>
+        <div class="stat-item slide-up" style="background: var(--background); color: var(--text);">
+          <h2>Study Streaks</h2>
+          <p><%= user.streaks %> Days</p>
+          <button class="pulse" onclick="shareStreak()">Brag</button>
+        </div>
+        <div class="stat-item slide-up" style="background: var(--background); color: var(--text);">
+          <h2>Progress</h2>
+          <p><%= user.progress || 0 %>% Complete</p>
+          <div class="progress-bar">
+            <div class="progress-fill" style="--progress: <%= user.progress || 0 %>%;"></div>
+          </div>
+        </div>
+        <div class="stat-item slide-up" style="background: var(--background); color: var(--text);">
+          <h2>Storage</h2>
+          <p><%= user.storageUsed || 0 %>MB / <%= user.plan === 'Premium' ? '10GB' : user.plan === 'Basic' ? '1GB' : '100MB' %></p>
+          <% if (user.plan !== 'Premium') { %>
+            <button class="pulse" onclick="upgradeStorage()">Upgrade</button>
+          <% } %>
+        </div>
+      <% } else { %>
+        <p class="no-user pulse">Please <a href="/login">login</a> to view your stats.</p>
+      <% } %>
+    </div>
+
+    <!-- Call to Action with bounce animation -->
+    <div class="cta bounce">
+      <% if (user && !user.onboarded) { %>
+        <button class="pulse" onclick="startOnboarding()">Get Started with Onboarding</button>
+      <% } else if (user) { %>
+        <button class="pulse" onclick="goToDashboard()">Go to Dashboard</button>
+      <% } else { %>
+        <button class="pulse" onclick="goToLogin()">Login or Register</button>
+      <% } %>
+    </div>
+
+    <!-- PayPal upgrade button for non-Premium users, animated confetti on success -->
+    <% if (user && user.plan !== 'Premium') { %>
+      <button class="pulse spin" id="paypal-upgrade">Upgrade to Premium with PayPal</button>
+    <% } %>
+  </div>
+
+  <!-- Parallax background for depth, minimal resource use -->
+  <div class="parallax-background"></div>
+
+  <!-- Lazy-loaded scripts for performance -->
+  <script src="/public/js/animations.min.js" defer></script>
+  <script src="/public/js/responsive.min.js" defer></script>
+  <script src="/public/js/theme.min.js" defer></script>
+  <script src="/public/js/auth.min.js" defer></script>
+  <script src="/public/js/review.min.js" defer></script>
+  <script>
+    // Comment: Initializes Home animations, optimized for mobile, triggers review popup
+    document.addEventListener('DOMContentLoaded', () => {
+      if ('<%= user && user.autoLogin %>') {
+        document.querySelector('.home-container').classList.add('slide-up');
+        document.querySelector('.parallax-background').classList.add('parallax-animation');
+      }
+      // Handle action animations
+      document.querySelectorAll('.pulse, .pulse-on-hover').forEach(el => {
+        el.addEventListener('mouseover', () => el.classList.add('pulse'));
+        el.addEventListener('mouseout', () => el.classList.remove('pulse'));
+      });
+
+      // Check for review popup
+      fetch('/review/check')
+        .then(response => response.json())
+        .then(data => {
+          if (data.showPopup) {
+            document.querySelector('.review-modal').style.display = 'block';
+            document.querySelector('.review-modal').classList.add('pop');
+          }
+        });
+    });
+
+    // Comment: Functions for home actions, animated transitions
+    function shareStreak() {
+      // Comment: Triggers confetti animation, shares streak with pop
+      document.querySelector('.pulse').classList.add('pulse');
+      const shareUrl = `${window.location.origin}/profile?streaks=<%= user.streaks %>`;
+      navigator.clipboard.writeText(shareUrl).then(() => {
+        alert('Streak link copied to clipboard!');
+        document.querySelector('.home-container').classList.add('pop');
+        if ('<%= user.plan === 'Premium' %>') {
+          document.querySelector('.home-container').innerHTML += '<div class="confetti" style="display: block;"></div>';
+          document.querySelector('.confetti').classList.add('confetti-animation');
+          setTimeout(() => document.querySelector('.confetti').style.display = 'none', 3000);
+        }
+      });
+    }
+
+    function upgradeStorage() {
+      // Comment: Triggers spin animation, PayPal redirect with confetti
+      document.querySelector('.pulse').classList.add('spin');
+      // PayPal integration (to be implemented in paymentService.js)
+      window.location.href = '/paypal/upgrade-storage';
+    }
+
+    function startOnboarding() {
+      // Comment: Triggers bounce animation, redirects to Onboarding with slide-in
+      document.querySelector('.pulse').classList.add('bounce');
+      window.location.href = '/onboarding';
+    }
+
+    function goToDashboard() {
+      // Comment: Triggers slide-up animation, redirects to Dashboard with fade-in
+      document.querySelector('.home-container').classList.add('slide-up');
+      window.location.href = '/dashboard';
+    }
+
+    function goToLogin() {
+      // Comment: Triggers pulse animation, redirects to Login with fade-in
+      document.querySelector('.pulse').classList.add('pulse');
+      window.location.href = '/login';
+    }
+  </script>
+</body>
+</html>

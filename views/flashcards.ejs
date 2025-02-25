@@ -1,0 +1,125 @@
+<!-- views/flashcards.ejs -->
+<!-- Renders the main Flashcards page with flip animation, optimized for performance -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>[App Name] Flashcards</title>
+  <link rel="stylesheet" href="/public/css/main.min.css">
+  <link rel="stylesheet" href="/public/css/darkmode.min.css">
+  <link rel="stylesheet" href="/public/css/animations.min.css">
+</head>
+<body data-theme="<%= user ? user.theme : 'dark' %>">
+  <!-- Header partial with sidebar and theme toggle, auto-login check -->
+  <%- include('partials/header') %>
+
+  <!-- Main Flashcards container with slide-in animation on auto-login -->
+  <div class="flashcards-container slide-in" <%= user && user.autoLogin ? 'class="fade-in"' : '' %>>
+    <h1>Flashcards</h1>
+    <!-- Flashcard list with slide-up animation -->
+    <div class="flashcard-list">
+      <% if (user.flashcards && user.flashcards.length > 0) { %>
+        <% user.flashcards.forEach(flashcard => { %>
+          <div class="flashcard-item slide-up" style="background: var(--background); color: var(--text);">
+            <h3><%= flashcard.name %></h3>
+            <p>Category: <%= flashcard.category %></p>
+            <p>Mastery: <%= flashcard.mastery || 0 %>%</p>
+            <!-- Mastery Meter with grow animation -->
+            <div class="mastery-meter">
+              <div class="mastery-fill" style="--progress: <%= flashcard.mastery || 0 %>%;"></div>
+            </div>
+            <!-- Actions with pulse animation -->
+            <button class="pulse" onclick="viewFlashcard('<%= flashcard.id %>')">View</button>
+            <button class="pulse" onclick="editFlashcard('<%= flashcard.id %>')">Edit</button>
+            <button class="pulse" onclick="deleteFlashcard('<%= flashcard.id %>')">Delete</button>
+            <button class="pulse" onclick="practiceFlashcard('<%= flashcard.id %>')">Practice</button>
+          </div>
+        <% }); %>
+      <% } else { %>
+        <p class="no-flashcards pulse">No flashcards yet. <a href="/flashcards/create">Create Now</a></p>
+      <% } %>
+    </div>
+
+    <!-- Create New Flashcard button with bounce animation -->
+    <button class="pulse bounce" onclick="createNewFlashcard()">Create New Flashcard</button>
+    <!-- Plan limit warning with shimmer animation -->
+    <% if (user.plan !== 'Premium' && user.flashcards && user.flashcards.length >= (user.plan === 'Basic' ? 180 : 50)) { %>
+      <p class="limit-warning shimmer">Limit Reached: <%= user.plan === 'Basic' ? '180' : '50' %>/<%= user.plan === 'Basic' ? '180' : '50' %> Flashcards Used. <button class="pulse" onclick="upgradePlan()">Upgrade</button></p>
+    <% } %>
+
+    <!-- PayPal upgrade button for Freemium/Basic, animated confetti on success -->
+    <% if (user.plan !== 'Premium') { %>
+      <button class="pulse" onclick="upgradeFlashcards()">Upgrade Flashcards with PayPal</button>
+    <% } %>
+  </div>
+
+  <!-- Parallax background for depth, minimal resource use -->
+  <div class="parallax-background"></div>
+
+  <!-- Lazy-loaded scripts for performance -->
+  <script src="/public/js/animations.min.js" defer></script>
+  <script src="/public/js/responsive.min.js" defer></script>
+  <script src="/public/js/theme.min.js" defer></script>
+  <script src="/public/js/auth.min.js" defer></script>
+  <script>
+    // Comment: Initializes Flashcards animations, optimized for mobile
+    document.addEventListener('DOMContentLoaded', () => {
+      if ('<%= user && user.autoLogin %>') {
+        document.querySelector('.flashcards-container').classList.add('fade-in');
+        document.querySelector('.parallax-background').classList.add('parallax-animation');
+      }
+      // Handle flashcard actions with animations
+      document.querySelectorAll('.pulse').forEach(el => {
+        el.addEventListener('mouseover', () => el.classList.add('pulse'));
+        el.addEventListener('mouseout', () => el.classList.remove('pulse'));
+      });
+    });
+
+    // Comment: Functions for flashcard actions, animated transitions
+    function viewFlashcard(id) {
+      // Trigger flip animation, redirect with fade-in
+      document.querySelector('.flashcard-item').classList.add('flip');
+      setTimeout(() => window.location.href = `/flashcards/view/${id}`, 600);
+    }
+    function editFlashcard(id) {
+      // Trigger bounce animation, redirect with slide-up
+      document.querySelector('.flashcard-item').classList.add('bounce');
+      window.location.href = `/flashcards/modify/${id}`;
+    }
+    function deleteFlashcard(id) {
+      // Trigger pulse animation, confirm with bounce
+      if (confirm('Delete this flashcard?')) {
+        document.querySelector('.flashcard-item').classList.add('pulse');
+        // AJAX call to delete, slide-out on success
+        fetch(`/flashcards/delete/${id}`, { method: 'DELETE' })
+          .then(response => response.json())
+          .then(data => {
+            if (data.success) document.querySelector('.flashcard-item').classList.add('slide-out');
+          });
+      }
+    }
+    function practiceFlashcard(id) {
+      // Trigger spin animation, redirect with pop
+      document.querySelector('.flashcard-item').classList.add('spin');
+      window.location.href = `/flashcards/practice/${id}`;
+    }
+    function createNewFlashcard() {
+      // Trigger bounce animation, redirect with slide-up
+      document.querySelector('.bounce').classList.add('pulse');
+      window.location.href = '/flashcards/create';
+    }
+    function upgradeFlashcards() {
+      // Comment: Triggers spin animation, PayPal redirect with confetti
+      document.querySelector('.pulse').classList.add('spin');
+      // PayPal integration (to be implemented in paymentService.js)
+      window.location.href = '/paypal/upgrade-flashcards';
+    }
+    function upgradePlan() {
+      // Comment: Triggers pulse animation, redirect to Settings for PayPal
+      document.querySelector('.pulse').classList.add('pulse');
+      window.location.href = '/settings';
+    }
+  </script>
+</body>
+</html>

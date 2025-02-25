@@ -1,0 +1,181 @@
+<!-- views/analytics.ejs -->
+<!-- Renders the Analytics page with fade-in animation, optimized for performance -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>[App Name] Analytics</title>
+  <link rel="stylesheet" href="/public/css/main.min.css">
+  <link rel="stylesheet" href="/public/css/darkmode.min.css">
+  <link rel="stylesheet" href="/public/css/animations.min.css">
+</head>
+<body data-theme="<%= user ? user.theme : 'dark' %>">
+  <!-- Header partial with sidebar and theme toggle, auto-login check, review popup trigger -->
+  <%- include('partials/header') %>
+  <!-- Review and Rating popup inclusion -->
+  <%- include('reviewRating') %>
+
+  <!-- Main Analytics container with fade-in animation on auto-login -->
+  <div class="analytics-container fade-in" <%= user && user.autoLogin ? 'class="slide-up"' : '' %>>
+    <h1>Analytics</h1>
+    <!-- Analytics sections with slide-up animation, responsive layout -->
+    <div class="analytics-sections">
+      <!-- Progress Section -->
+      <div class="analytics-section slide-up">
+        <h2>Study Progress</h2>
+        <p>Overall Progress: <%= user.progress || 0 %>%</p>
+        <canvas id="progressChart" class="chart grow"></canvas>
+      </div>
+
+      <!-- Questions Section -->
+      <div class="analytics-section slide-up">
+        <h2>Question Performance</h2>
+        <p>Average Score: <%= user.questionPerformance || 0 %>%</p>
+        <canvas id="questionsChart" class="chart spin"></canvas>
+      </div>
+
+      <!-- Streaks Section -->
+      <div class="analytics-section slide-up">
+        <h2>Study Streaks</h2>
+        <p>Current Streak: <%= user.streaks %> Days</p>
+        <canvas id="streaksChart" class="chart flip"></canvas>
+      </div>
+
+      <!-- Insights Section -->
+      <div class="analytics-section slide-up">
+        <h2>AI Insights</h2>
+        <p><%= user.insights || 'Focus on key areas for better retention' %></p>
+        <% if (user.plan === 'Premium') { %>
+          <p>Team Insights: <%= user.teamInsights || 'Team progress is strong' %></p>
+        <% } %>
+      </div>
+    </div>
+
+    <!-- Actions with pulse animation -->
+    <div class="analytics-actions pulse">
+      <% if (user.plan === 'Premium') { %>
+        <button class="pulse" onclick="exportAnalytics()">Export Data</button>
+      <% } else { %>
+        <button class="pulse" onclick="exportAnalytics()">Export Basic Data</button>
+        <p class="upgrade-prompt shimmer">Upgrade for Advanced Analytics. <button class="pulse" onclick="upgradePlan()">Upgrade</button></p>
+      <% } %>
+      <!-- PayPal upgrade button for Freemium/Basic, animated confetti on success -->
+      <% if (user.plan !== 'Premium') { %>
+        <button class="pulse spin" id="paypal-upgrade">Unlock Advanced Analytics with PayPal</button>
+      <% } %>
+    </div>
+  </div>
+
+  <!-- Parallax background for depth, minimal resource use -->
+  <div class="parallax-background"></div>
+
+  <!-- Lazy-loaded scripts for performance -->
+  <script src="/public/js/animations.min.js" defer></script>
+  <script src="/public/js/responsive.min.js" defer></script>
+  <script src="/public/js/theme.min.js" defer></script>
+  <script src="/public/js/auth.min.js" defer></script>
+  <script src="/public/js/review.min.js" defer></script>
+  <script src="/public/js/chart.min.js" defer></script>
+  <script>
+    // Comment: Initializes Analytics animations, optimized for mobile, triggers review popup
+    document.addEventListener('DOMContentLoaded', () => {
+      if ('<%= user && user.autoLogin %>') {
+        document.querySelector('.analytics-container').classList.add('slide-up');
+        document.querySelector('.parallax-background').classList.add('parallax-animation');
+      }
+      // Handle action animations
+      document.querySelectorAll('.pulse, .pulse-on-hover').forEach(el => {
+        el.addEventListener('mouseover', () => el.classList.add('pulse'));
+        el.addEventListener('mouseout', () => el.classList.remove('pulse'));
+      });
+
+      // Check for review popup
+      fetch('/review/check')
+        .then(response => response.json())
+        .then(data => {
+          if (data.showPopup) {
+            document.querySelector('.review-modal').style.display = 'block';
+            document.querySelector('.review-modal').classList.add('pop');
+          }
+        });
+
+      // Initialize Chart.js charts with animations
+      const progressCtx = document.getElementById('progressChart').getContext('2d');
+      new Chart(progressCtx, {
+        type: 'bar',
+        data: { 
+          labels: ['Overall Progress'],
+          datasets: [{ 
+            data: [<%= user.progress || 0 %>], 
+            backgroundColor: 'var(--accent)' 
+          }]
+        },
+        options: {
+          animation: { duration: 1000, easing: 'easeInOutQuad' }, // Grow animation
+          plugins: { legend: { display: false }, labels: { color: 'var(--text)' } }
+        }
+      });
+
+      const questionsCtx = document.getElementById('questionsChart').getContext('2d');
+      new Chart(questionsCtx, {
+        type: 'pie',
+        data: { 
+          labels: ['Correct', 'Incorrect'],
+          datasets: [{ 
+            data: [<%= user.questionPerformance || 0 %>, 100 - (<%= user.questionPerformance || 0 %>)], 
+            backgroundColor: ['var(--accent)', 'var(--error)'] 
+          }]
+        },
+        options: {
+          animation: { duration: 1000, easing: 'easeInOutQuad' }, // Spin animation
+          plugins: { legend: { labels: { color: 'var(--text)' } } }
+        }
+      });
+
+      const streaksCtx = document.getElementById('streaksChart').getContext('2d');
+      new Chart(streaksCtx, {
+        type: 'line',
+        data: { 
+          labels: Array.from({ length: <%= user.streaks %> }, (_, i) => `Day ${i + 1}`),
+          datasets: [{ 
+            data: Array.from({ length: <%= user.streaks %> }, (_, i) => Math.random() * 100), 
+            borderColor: 'var(--accent)', 
+            fill: false 
+          }]
+        },
+        options: {
+          animation: { duration: 1000, easing: 'easeInOutQuad' }, // Flip animation
+          plugins: { legend: { display: false }, labels: { color: 'var(--text)' } }
+        }
+      });
+    });
+
+    // Comment: Functions for analytics actions, animated transitions
+    function exportAnalytics() {
+      // Comment: Triggers spin animation, exports data with pop
+      document.querySelector('.pulse').classList.add('spin');
+      fetch('/analytics/export', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' }
+      }).then(response => response.blob()).then(blob => {
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `analytics_${new Date().toISOString()}.json`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(url);
+        document.querySelector('.analytics-container').classList.add('pop');
+      });
+    }
+
+    function upgradePlan() {
+      // Comment: Triggers pulse animation, redirects to PayPal for Premium
+      document.querySelector('.pulse').classList.add('pulse');
+      window.location.href = '/paypal/subscribe?plan=Premium';
+    }
+  </script>
+</body>
+</html>

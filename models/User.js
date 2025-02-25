@@ -1,42 +1,22 @@
-const mongoose = require("mongoose");
+// models/User.js
+const mongoose = require('mongoose');
 
-const UserSchema = new mongoose.Schema({
-    name: { type: String, required: true },
-    email: { type: String, required: true, unique: true },
-    password: { type: String, required: true },
-    isPremium: { type: Boolean, default: false }, // Track premium users
-    subscriptionExpiry: { type: Date }, // Track subscription end date
-    
-    // Study Streak Tracking
-    streak: { type: Number, default: 0 }, // Consecutive study days
-    lastStudyDate: { type: String }, // Last date user studied
-    
-    // Gamification Features
-    points: { type: Number, default: 0 }, // User points from flashcards
-    level: { type: Number, default: 1 }, // Level up every 100 points
-    
-    // Flashcards
-    customFlashcards: [{
-        question: { type: String },
-        answer: { type: String }
-    }],
-    
-    // Question History
-    questionHistory: [{
-        question: { type: String },
-        userAnswer: { type: String },
-        correctAnswer: { type: String },
-        isCorrect: { type: Boolean }
-    }],
-    
-    // Payment Tracking
-    paymentHistory: [{
-        date: { type: Date, default: Date.now },
-        amount: { type: Number },
-        method: { type: String }, // PayPal, Credit Card, etc.
-        status: { type: String, default: "Completed" }
-    }]
+const userSchema = new mongoose.Schema({
+  email: { type: String, required: true, unique: true },
+  password: { type: String }, // For local auth
+  googleId: String, // For Google auth
+  name: String,
+  plan: { type: String, default: 'Freemium' }, // Freemium, Basic, Premium
+  streaks: { type: Number, default: 0 },
+  theme: { type: String, default: 'dark' }, // dark, light
+  onboarded: { type: Boolean, default: false },
+  paymentHistory: [Object], // PayPal transactions
+  authTokens: [{ type: String }], // Store refresh tokens
+  autoLogin: { type: Boolean, default: true }, // Enable auto-login
+  loginCount: { type: Number, default: 0 }, // Track logins for review popup
+  actionCount: { type: Number, default: 0 }, // Track actions for review popup
+  reviewed: { type: Boolean, default: false }, // Track if user reviewed
+  review: { rating: Number, feedback: String, date: Date } // Store review data
 });
 
-const User = mongoose.model("User", UserSchema);
-module.exports = User;
+module.exports = mongoose.model('User', userSchema);

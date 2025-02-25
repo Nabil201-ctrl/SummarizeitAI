@@ -1,0 +1,152 @@
+<!-- views/summarizedPDF.ejs -->
+<!-- Renders the Summarized PDF page with fade-in animation, optimized for performance -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>[App Name] Summarized PDF</title>
+  <link rel="stylesheet" href="/public/css/main.min.css">
+  <link rel="stylesheet" href="/public/css/darkmode.min.css">
+  <link rel="stylesheet" href="/public/css/animations.min.css">
+</head>
+<body data-theme="<%= user ? user.theme : 'dark' %>">
+  <!-- Header partial with sidebar and theme toggle, auto-login check, review popup trigger -->
+  <%- include('partials/header') %>
+  <!-- Review and Rating popup inclusion -->
+  <%- include('reviewRating') %>
+
+  <!-- Main Summarized PDF container with fade-in animation on auto-login -->
+  <div class="summarized-pdf-container fade-in" <%= user && user.autoLogin ? 'class="slide-up"' : '' %>>
+    <h1>Summarized PDF: <%= pdf.name %></h1>
+    <!-- PDF Viewer with zoom animation (simplified, use pdf.js for full functionality) -->
+    <div class="pdf-viewer zoom">
+      <iframe src="<%= pdf.url || '/public/pdfs/default.pdf' %>" width="100%" height="500px" frameborder="0"></iframe>
+    </div>
+
+    <!-- Summary Details with slide-up animation -->
+    <div class="summary-details slide-up">
+      <h2>Summary</h2>
+      <p><%= pdf.summary || 'No summary available' %></p>
+      <!-- Progress with animated bar -->
+      <h3>Progress</h3>
+      <p><%= pdf.progress || 0 %>% Complete</p>
+      <div class="progress-bar">
+        <div class="progress-fill" style="--progress: <%= pdf.progress || 0 %>%;"></div>
+      </div>
+      <!-- Upload/creation details -->
+      <p>Uploaded: <%= new Date(pdf.uploadDate).toLocaleDateString() %>, Size: <%= pdf.size || 0 %>MB</p>
+    </div>
+
+    <!-- Actions with pulse animation -->
+    <div class="actions pulse">
+      <% if (user.plan === 'Premium') { %>
+        <button class="pulse" onclick="exportPDF()">Export as PDF/DOCX</button>
+        <button class="pulse" onclick="generateQuestions()">Generate Questions</button>
+        <button class="pulse" onclick="sharePDF()">Share</button>
+      <% } else { %>
+        <button class="pulse" onclick="exportPDF()">Export as DOCX (Watermarked)</button>
+        <button class="pulse" onclick="generateQuestions()">Generate Questions (20/month)</button>
+        <button class="pulse" onclick="sharePDF()">Share (Watermarked)</button>
+      <% } %>
+      <!-- Plan limit warning with shimmer animation for non-Premium -->
+      <% if (user.plan !== 'Premium' && user.questionsGenerated >= 20) { %>
+        <p class="limit-warning shimmer">Question Limit Reached: 20/20 Used. <button class="pulse" onclick="upgradePlan()">Upgrade</button></p>
+      <% } %>
+      <!-- PayPal upgrade button for Freemium/Basic, animated confetti on success -->
+      <% if (user.plan !== 'Premium') { %>
+        <button class="pulse" onclick="upgradePDF()">Upgrade Features with PayPal</button>
+      <% } %>
+    </div>
+  </div>
+
+  <!-- Parallax background for depth, minimal resource use -->
+  <div class="parallax-background"></div>
+
+  <!-- Lazy-loaded scripts for performance -->
+  <script src="/public/js/animations.min.js" defer></script>
+  <script src="/public/js/responsive.min.js" defer></script>
+  <script src="/public/js/theme.min.js" defer></script>
+  <script src="/public/js/auth.min.js" defer></script>
+  <script src="/public/js/review.min.js" defer></script>
+  <script>
+    // Comment: Initializes Summarized PDF animations, optimized for mobile, triggers review popup
+    document.addEventListener('DOMContentLoaded', () => {
+      if ('<%= user && user.autoLogin %>') {
+        document.querySelector('.summarized-pdf-container').classList.add('slide-up');
+        document.querySelector('.parallax-background').classList.add('parallax-animation');
+      }
+      // Handle action animations
+      document.querySelectorAll('.pulse').forEach(el => {
+        el.addEventListener('mouseover', () => el.classList.add('pulse'));
+        el.addEventListener('mouseout', () => el.classList.remove('pulse'));
+      });
+
+      // Check for review popup
+      fetch('/review/check')
+        .then(response => response.json())
+        .then(data => {
+          if (data.showPopup) {
+            document.querySelector('.review-modal').style.display = 'block';
+            document.querySelector('.review-modal').classList.add('pop');
+          }
+        });
+    });
+
+    // Comment: Functions for PDF actions, animated transitions
+    function exportPDF() {
+      // Comment: Triggers zoom animation, downloads PDF/DOCX with fade
+      document.querySelector('.pdf-viewer').classList.add('zoom');
+      fetch('/summarized-pdf/export/<%= pdf.id %>', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' }
+      }).then(response => response.blob()).then(blob => {
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${pdf.name}_summary.${user.plan === 'Premium' ? 'pdf' : 'docx'}`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(url);
+        document.querySelector('.summarized-pdf-container').classList.add('fade-in');
+      });
+    }
+
+    function generateQuestions() {
+      // Comment: Triggers spin animation, redirects to questions with pop
+      document.querySelector('.pulse').classList.add('spin');
+      const limit = '<%= user.plan === 'Premium' ? 'Unlimited' : user.plan === 'Basic' ? 100 : 20 %>';
+      if ('<%= user.plan !== 'Premium' && user.questionsGenerated >= 20 %>') {
+        alert('Question limit reached. Upgrade to generate more.');
+        return;
+      }
+      window.location.href = `/questions/generate?source=summarized&pdfId=<%= pdf.id %>`;
+      document.querySelector('.summarized-pdf-container').classList.add('pop');
+    }
+
+    function sharePDF() {
+      // Comment: Triggers bounce animation, shares with watermark for non-Premium
+      document.querySelector('.pulse').classList.add('bounce');
+      const shareUrl = `${window.location.origin}/summarized-pdf/share/<%= pdf.id %>${user.plan !== 'Premium' ? '?watermark=true' : ''}`;
+      navigator.clipboard.writeText(shareUrl).then(() => {
+        alert('Link copied to clipboard!' + (user.plan !== 'Premium' ? ' (Watermarked)' : ''));
+        document.querySelector('.summarized-pdf-container').classList.add('pop');
+      });
+    }
+
+    function upgradePlan() {
+      // Comment: Triggers pulse animation, redirect to Settings for PayPal
+      document.querySelector('.pulse').classList.add('pulse');
+      window.location.href = '/settings';
+    }
+
+    function upgradePDF() {
+      // Comment: Triggers spin animation, PayPal redirect with confetti
+      document.querySelector('.pulse').classList.add('spin');
+      // PayPal integration (to be implemented in paymentService.js)
+      window.location.href = '/paypal/upgrade-pdf';
+    }
+  </script>
+</body>
+</html>

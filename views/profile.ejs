@@ -1,0 +1,145 @@
+<!-- views/profile.ejs -->
+<!-- Renders the Profile page with fade-in animation, optimized for performance -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>[App Name] Profile</title>
+  <link rel="stylesheet" href="/public/css/main.min.css">
+  <link rel="stylesheet" href="/public/css/darkmode.min.css">
+  <link rel="stylesheet" href="/public/css/animations.min.css">
+</head>
+<body data-theme="<%= user ? user.theme : 'dark' %>">
+  <!-- Header partial with sidebar and theme toggle, auto-login check, review popup trigger -->
+  <%- include('partials/header') %>
+  <!-- Review and Rating popup inclusion -->
+  <%- include('reviewRating') %>
+
+  <!-- Main Profile container with fade-in animation on auto-login -->
+  <div class="profile-container fade-in" <%= user && user.autoLogin ? 'class="slide-up"' : '' %>>
+    <h1>Profile: <%= user.name %></h1>
+    <!-- Profile card with slide-up animation -->
+    <div class="profile-card slide-up">
+      <!-- Profile Photo with zoom animation -->
+      <div class="profile-photo zoom">
+        <img src="<%= user.photo || '/public/images/default-avatar.png' %>" alt="<%= user.name %>'s Photo" class="pulse-on-hover">
+        <button class="pulse" onclick="uploadPhoto()">Upload Photo</button>
+      </div>
+      <!-- Profile Details with pulse animation -->
+      <div class="profile-details pulse">
+        <label>Name:
+          <input type="text" name="name" value="<%= user.name %>" class="pulse-on-focus" readonly>
+        </label>
+        <label>Email:
+          <input type="email" name="email" value="<%= user.email %>" class="pulse-on-focus" readonly>
+        </label>
+        <label>Joined:
+          <p><%= new Date(user.createdAt).toLocaleDateString() %></p>
+        </label>
+      </div>
+      <!-- Stats with pop animation -->
+      <div class="profile-stats pop">
+        <h2>Stats</h2>
+        <p>Streaks: <%= user.streaks %> Days</p>
+        <p>Progress: <%= user.progress || 0 %>% Complete</p>
+        <p>Plan: <%= user.plan %></p>
+        <% if (user.plan === 'Premium') { %>
+          <p>Premium Badges: <%= user.badges || 'None' %></p>
+          <p>Leaderboard Rank: <%= user.leaderboardRank || 'N/A' %></p>
+        <% } %>
+      </div>
+      <!-- Actions with pulse animation -->
+      <div class="profile-actions pulse">
+        <button class="pulse bounce" onclick="editProfile()">Edit Profile</button>
+        <button class="pulse" onclick="viewAnalytics()">View Analytics</button>
+        <% if (user.plan !== 'Premium') { %>
+          <button class="pulse" onclick="upgradePlan()">Upgrade to Premium</button>
+        <% } %>
+        <!-- PayPal upgrade button for Freemium/Basic, animated confetti on success -->
+        <% if (user.plan !== 'Premium') { %>
+          <button class="pulse spin" id="paypal-upgrade">Upgrade Now with PayPal</button>
+        <% } %>
+      </div>
+    </div>
+  </div>
+
+  <!-- Parallax background for depth, minimal resource use -->
+  <div class="parallax-background"></div>
+
+  <!-- Lazy-loaded scripts for performance -->
+  <script src="/public/js/animations.min.js" defer></script>
+  <script src="/public/js/responsive.min.js" defer></script>
+  <script src="/public/js/theme.min.js" defer></script>
+  <script src="/public/js/auth.min.js" defer></script>
+  <script src="/public/js/review.min.js" defer></script>
+  <script>
+    // Comment: Initializes Profile animations, optimized for mobile, triggers review popup
+    document.addEventListener('DOMContentLoaded', () => {
+      if ('<%= user && user.autoLogin %>') {
+        document.querySelector('.profile-container').classList.add('slide-up');
+        document.querySelector('.parallax-background').classList.add('parallax-animation');
+      }
+      // Handle action animations
+      document.querySelectorAll('.pulse, .pulse-on-hover, .pulse-on-focus').forEach(el => {
+        el.addEventListener('mouseover', () => el.classList.add('pulse'));
+        el.addEventListener('mouseout', () => el.classList.remove('pulse'));
+        el.addEventListener('focus', () => el.classList.add('pulse'));
+        el.addEventListener('blur', () => el.classList.remove('pulse'));
+      });
+
+      // Check for review popup
+      fetch('/review/check')
+        .then(response => response.json())
+        .then(data => {
+          if (data.showPopup) {
+            document.querySelector('.review-modal').style.display = 'block';
+            document.querySelector('.review-modal').classList.add('pop');
+          }
+        });
+    });
+
+    // Comment: Functions for profile actions, animated transitions
+    function uploadPhoto() {
+      // Comment: Triggers zoom animation, opens file input with pop
+      document.querySelector('.profile-photo').classList.add('zoom');
+      const input = document.createElement('input');
+      input.type = 'file';
+      input.accept = 'image/*';
+      input.onchange = (e) => {
+        const file = e.target.files[0];
+        const formData = new FormData();
+        formData.append('photo', file);
+        fetch('/profile/photo', {
+          method: 'POST',
+          body: formData
+        }).then(response => response.json()).then(data => {
+          if (data.success) {
+            document.querySelector('.profile-photo img').src = data.url;
+            document.querySelector('.profile-container').classList.add('pop');
+          }
+        });
+      };
+      input.click();
+    }
+
+    function editProfile() {
+      // Comment: Triggers bounce animation, redirects to edit form with slide-up
+      document.querySelector('.pulse.bounce').classList.add('pulse');
+      window.location.href = '/profile/edit';
+    }
+
+    function viewAnalytics() {
+      // Comment: Triggers slide-up animation, redirects to Analytics with fade-in
+      document.querySelector('.profile-container').classList.add('slide-up');
+      window.location.href = '/analytics';
+    }
+
+    function upgradePlan() {
+      // Comment: Triggers pulse animation, redirects to PayPal for Premium
+      document.querySelector('.pulse').classList.add('pulse');
+      window.location.href = '/paypal/subscribe?plan=Premium';
+    }
+  </script>
+</body>
+</html>

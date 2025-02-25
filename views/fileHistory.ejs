@@ -1,0 +1,123 @@
+<!-- views/fileHistory.ejs -->
+<!-- Renders the File History page with slide-in animation, optimized for performance -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>[App Name] File History</title>
+  <link rel="stylesheet" href="/public/css/main.min.css">
+  <link rel="stylesheet" href="/public/css/darkmode.min.css">
+  <link rel="stylesheet" href="/public/css/animations.min.css">
+</head>
+<body data-theme="<%= user ? user.theme : 'dark' %>">
+  <!-- Header partial with sidebar and theme toggle, auto-login check -->
+  <%- include('partials/header') %>
+
+  <!-- Main File History container with slide-in animation on auto-login -->
+  <div class="file-history-container slide-in" <%= user && user.autoLogin ? 'class="fade-in"' : '' %>>
+    <h1>File History</h1>
+    <!-- Filter and sort options with pulse animation -->
+    <div class="filters pulse-on-hover">
+      <input type="text" placeholder="Search files..." class="pulse-on-focus">
+      <select class="pulse-on-focus">
+        <option value="date">Sort by Date</option>
+        <option value="type">Sort by Type</option>
+        <option value="size">Sort by Size</option>
+      </select>
+      <!-- Retention notice based on plan -->
+      <p class="retention-note">
+        Files retained for <%= user.plan === 'Premium' ? 'Unlimited' : user.plan === 'Basic' ? '90 Days' : '30 Days' %>.
+      </p>
+    </div>
+
+    <!-- File list with slide-up animation, responsive grid -->
+    <div class="file-list">
+      <% if (user.fileHistory && user.fileHistory.length > 0) { %>
+        <% user.fileHistory.forEach(file => { %>
+          <div class="file-item slide-up" style="background: var(--background); color: var(--text);">
+            <h3><%= file.name %></h3>
+            <p>Uploaded: <%= file.date %></p>
+            <p>Type: <%= file.type %>, Size: <%= file.size %>MB</p>
+            <!-- Actions with pulse animation -->
+            <button class="pulse" onclick="viewFile('<%= file.id %>')">View</button>
+            <button class="pulse" onclick="deleteFile('<%= file.id %>')">Delete</button>
+            <% if (user.plan !== 'Premium') { %>
+              <button class="pulse" onclick="upgradePlan()">Upgrade for More</button>
+            <% } %>
+          </div>
+        <% }); %>
+      <% } else { %>
+        <p class="no-files pulse">No files yet. <a href="/notes">Upload Now</a></p>
+      <% } %>
+    </div>
+
+    <!-- "Recently Viewed" carousel with slide-in animation -->
+    <div class="recently-viewed slide-in">
+      <h2>Recently Viewed</h2>
+      <div class="carousel">
+        <% user.recentlyViewed.slice(0, 3).forEach(file => { %>
+          <div class="carousel-item slide-up" style="background: var(--background); color: var(--text);">
+            <h3><%= file.name %></h3>
+            <p>Last Viewed: <%= file.lastViewed %></p>
+            <button class="pulse" onclick="viewFile('<%= file.id %>')">Open</button>
+          </div>
+        <% }); %>
+      </div>
+    </div>
+
+    <!-- PayPal upgrade button for Freemium/Basic, animated confetti on success -->
+    <% if (user.plan !== 'Premium') { %>
+      <button class="pulse" onclick="upgradeStorage()">Upgrade Storage with PayPal</button>
+    <% } %>
+  </div>
+
+  <!-- Parallax background for depth, minimal resource use -->
+  <div class="parallax-background"></div>
+
+  <!-- Lazy-loaded scripts for performance -->
+  <script src="/public/js/animations.min.js" defer></script>
+  <script src="/public/js/responsive.min.js" defer></script>
+  <script src="/public/js/theme.min.js" defer></script>
+  <script src="/public/js/auth.min.js" defer></script>
+  <script>
+    // Comment: Initializes File History animations, optimized for mobile
+    document.addEventListener('DOMContentLoaded', () => {
+      if ('<%= user && user.autoLogin %>') {
+        document.querySelector('.file-history-container').classList.add('fade-in');
+        document.querySelector('.parallax-background').classList.add('parallax-animation');
+      }
+      // Handle filter/sort animations
+      document.querySelectorAll('.pulse-on-hover').forEach(el => {
+        el.addEventListener('mouseover', () => el.classList.add('pulse'));
+        el.addEventListener('mouseout', () => el.classList.remove('pulse'));
+      });
+    });
+
+    // Comment: Functions for file actions, animated transitions
+    function viewFile(id) { 
+      // Trigger slide-up animation, redirect with fade-in
+      document.querySelector('.file-item').classList.add('slide-up');
+      window.location.href = `/notes/${id}`;
+    }
+    function deleteFile(id) {
+      // Trigger pulse animation, confirm with bounce
+      if (confirm('Delete this file?')) {
+        document.querySelector('.file-item').classList.add('pulse');
+        // AJAX call to delete, slide-out on success
+        fetch(`/history/delete/${id}`, { method: 'DELETE' })
+          .then(response => response.json())
+          .then(data => {
+            if (data.success) document.querySelector('.file-item').classList.add('slide-out');
+          });
+      }
+    }
+    function upgradeStorage() {
+      // Comment: Triggers spin animation, PayPal redirect with confetti
+      document.querySelector('.pulse').classList.add('spin');
+      // PayPal integration (to be implemented in paymentService.js)
+      window.location.href = '/paypal/upgrade-storage';
+    }
+  </script>
+</body>
+</html>

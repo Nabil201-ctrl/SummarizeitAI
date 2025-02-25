@@ -1,20 +1,53 @@
+<!-- views/login.ejs -->
+<!-- Renders login page with fade-in animation, auto-login check, optimized for performance -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <title>Login</title>
-    <link rel="stylesheet" href="/css/styles.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>[App Name] Login</title>
+  <link rel="stylesheet" href="/public/css/main.min.css">
+  <link rel="stylesheet" href="/public/css/darkmode.min.css">
+  <link rel="stylesheet" href="/public/css/animations.min.css">
 </head>
-<body>
-    <%- include('partials/header') %>
-    <main>
-        <h1>Login</h1>
-        <form action="/auth/login" method="POST">
-            <input type="email" name="email" placeholder="Email" required>
-            <input type="password" name="password" placeholder="Password" required>
-            <button type="submit">Login</button>
-        </form>
-        <p>Don't have an account? <a href="/auth/register">Register</a></p>
-    </main>
-    <%- include('partials/footer') %>
+<body data-theme="<%= user ? user.theme : 'dark' %>">
+  <!-- Main login container with fade-in animation -->
+  <div class="login-container fade-in">
+    <h1>Login to [App Name]</h1>
+    <% if (error) { %>
+      <p class="error pulse"><%= error %></p>
+    <% } %>
+    <!-- Username/Password form with pulse animation -->
+    <form action="/auth/login" method="POST" class="login-form">
+      <input type="email" name="email" placeholder="Email" class="pulse-on-focus" required>
+      <input type="password" name="password" placeholder="Password" class="pulse-on-focus" required>
+      <button type="submit" class="pulse">Login</button>
+    </form>
+    <!-- Google Auth button with spin animation -->
+    <button class="pulse" onclick="googleLogin()" id="google-btn">
+      Login with Google <span class="spin"></span>
+    </button>
+    <a href="/auth/register">Register</a>
+    <!-- Auto-login check, redirects to Dashboard with fade-in -->
+    <% if (user && user.autoLogin) { %>
+      <script>window.location.href = '/dashboard';</script>
+    <% } %>
+    <!-- Parallax background for depth, minimal resource use -->
+    <div class="parallax-background"></div>
+  </div>
+
+  <!-- Lazy-loaded scripts for performance -->
+  <script src="/public/js/animations.min.js" defer></script>
+  <script src="/public/js/responsive.min.js" defer></script>
+  <script src="/public/js/theme.min.js" defer></script>
+  <script src="/public/js/auth.min.js" defer></script>
+  <script>
+    // Comment: Handles Google login animation, optimized for mobile
+    function googleLogin() {
+      document.querySelector('#google-btn .spin').style.display = 'inline';
+      // Trigger spin animation, pop on success
+      setTimeout(() => document.querySelector('#google-btn').classList.add('pulse'), 500);
+    }
+  </script>
 </body>
 </html>

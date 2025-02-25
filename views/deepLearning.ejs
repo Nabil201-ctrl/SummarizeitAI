@@ -1,0 +1,358 @@
+<!-- views/deepLearning.ejs -->
+<!-- Renders the Deep Learning page with flip animation, optimized for performance -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>[App Name] Deep Learning</title>
+  <link rel="stylesheet" href="/public/css/main.min.css">
+  <link rel="stylesheet" href="/public/css/darkmode.min.css">
+  <link rel="stylesheet" href="/public/css/animations.min.css">
+</head>
+<body data-theme="<%= user ? user.theme : 'dark' %>">
+  <!-- Header partial with sidebar and theme toggle, auto-login check -->
+  <%- include('partials/header') %>
+
+  <!-- Main Deep Learning container with flip animation on auto-login -->
+  <div class="deep-learning-container flip" <%= user && user.autoLogin ? 'class="fade-in"' : '' %>>
+    <h1>Deep Learning: <%= book.name %></h1>
+    <!-- Tool bar with pulse animation for Premium users -->
+    <% if (user.plan === 'Premium') { %>
+      <div class="tool-bar pulse">
+        <button class="pulse" onclick="highlightText()">Highlight <span class="spin"></span></button>
+        <button class="pulse" onclick="editText()">Edit <span class="spin"></span></button>
+        <button class="pulse" onclick="annotateText()">Annotate <span class="spin"></span></button>
+        <button class="pulse" onclick="exportNotes()">Export <span class="spin"></span></button>
+        <button class="pulse" onclick="customizeTools()">Customize <span class="spin"></span></button>
+      </div>
+    <% } else { %>
+      <p class="upgrade-prompt shimmer">Upgrade to Premium for Deep Learning Tools. <button class="pulse" onclick="upgradePlan()">Upgrade</button></p>
+    <% } %>
+
+    <!-- Book Details (Left Section) with slide-up animation -->
+    <div class="book-details slide-up">
+      <h2>Name of the Book</h2>
+      <p><%= book.name %></p>
+      <h3>Book Image</h3>
+      <img src="<%= book.image || '/public/images/default-book.png' %>" alt="<%= book.name %>" class="book-image">
+      <h3>Book Progress</h3>
+      <p><%= book.progress || 0 %>% Complete</p>
+      <div class="progress-bar">
+        <div class="progress-fill" style="--progress: <%= book.progress || 0 %>%;"></div>
+      </div>
+      <h3>When You Started Reading</h3>
+      <p><%= book.startDate ? new Date(book.startDate).toLocaleDateString() : 'Not started' %></p>
+      <button class="pulse" onclick="resumeReading()">Resume Reading</button>
+    </div>
+
+    <!-- Platform Area (Right Section) with tabs, responsive layout -->
+    <div class="platform-area">
+      <!-- Tabs with slide-up animation -->
+      <div class="tabs">
+        <button class="tab-button pulse <%= activeTab === 'notes' ? 'active' : '' %>" onclick="switchTab('notes')">Notes</button>
+        <button class="tab-button pulse <%= activeTab === 'analytics' ? 'active' : '' %>" onclick="switchTab('analytics')">Analytics</button>
+      </div>
+
+      <!-- Notes Tab (Default) -->
+      <div class="tab-content <%= activeTab === 'notes' ? 'active' : '' %> slide-up">
+        <!-- Editable text area with highlight, edit, annotate for Premium -->
+        <% if (user.plan === 'Premium') { %>
+          <textarea id="notes-area" class="notes-area pulse-on-focus"><%= book.notes || '' %></textarea>
+          <div id="highlights" class="highlights">
+            <% book.highlights.forEach(highlight => { %>
+              <div class="highlight-item flip" style="background-color: <%= highlight.color || '#ffeb3b' %>;">
+                <p><%= highlight.text %></p>
+                <button class="pulse" onclick="removeHighlight('<%= highlight.id %>')">Remove</button>
+                <button class="pulse" onclick="generateQuestion('<%= highlight.id %>')">Generate Question</button>
+              </div>
+            <% }); %>
+          </div>
+        <% } else { %>
+          <p class="upgrade-prompt shimmer">Upgrade to edit and highlight notes. <button class="pulse" onclick="upgradePlan()">Upgrade</button></p>
+          <textarea readonly class="notes-area"><%= book.notes || '' %></textarea>
+        <% } %>
+      </div>
+
+      <!-- Analytics Tab -->
+      <div class="tab-content <%= activeTab === 'analytics' ? 'active' : '' %> slide-up">
+        <h2>Overall Progress</h2>
+        <p><%= book.overallProgress || 0 %>% across <%= book.books || 0 %> books</p>
+        <div class="progress-bar">
+          <div class="progress-fill" style="--progress: <%= book.overallProgress || 0 %>%;"></div>
+        </div>
+        <h2>Flashcard Analysis</h2>
+        <p>Completed: <%= book.completedCards || 0 %> / <%= book.totalCards || 0 %></p>
+        <h2>Time Spent & Insights</h2>
+        <p>Total Time: <%= book.timeSpent || '0' %> hours, Speed: <%= book.speed || 'N/A' %> pages/hour</p>
+        <p>Insights: <%= book.insights || 'Focus on key chapters' %></p>
+        <!-- Chart.js integration for analytics -->
+        <canvas id="deepLearningChart" class="chart"></canvas>
+      </div>
+    </div>
+
+    <!-- Customization modal for Premium, animated pop-up -->
+    <% if (user.plan === 'Premium') { %>
+      <div class="customize-modal" style="display: none;">
+        <h2>Customize Deep Learning</h2>
+        <label>Layout:
+          <select id="layout" class="pulse-on-focus">
+            <option value="split" <%= user.deepLearningConfig.layout === 'split' ? 'selected' : '' %>>Split-Screen</option>
+            <option value="full" <%= user.deepLearningConfig.layout === 'full' ? 'selected' : '' %>>Full-Width Notes</option>
+          </select>
+        </label>
+        <label>Tool Order:
+          <div id="tool-order" class="drag-area pulse-on-focus">
+            <span draggable="true" data-tool="highlight">Highlight</span>
+            <span draggable="true" data-tool="edit">Edit</span>
+            <span draggable="true" data-tool="annotate">Annotate</span>
+            <span draggable="true" data-tool="export">Export</span>
+          </div>
+        </label>
+        <label>Theme - Highlight Color:
+          <input type="color" id="highlightColor" value="<%= user.deepLearningConfig.highlightColor || '#ffeb3b' %>" class="pulse-on-focus">
+        </label>
+        <label>Theme - Background:
+          <select id="background" class="pulse-on-focus">
+            <option value="dark" <%= user.deepLearningConfig.background === 'dark' ? 'selected' : '' %>>Dark</option>
+            <option value="light" <%= user.deepLearningConfig.background === 'light' ? 'selected' : '' %>>Light</option>
+          </select>
+        </label>
+        <label>Font Size:
+          <select id="fontSize" class="pulse-on-focus">
+            <option value="12" <%= user.deepLearningConfig.fontSize === '12' ? 'selected' : '' %>>12px</option>
+            <option value="14" <%= user.deepLearningConfig.fontSize === '14' ? 'selected' : '' %>>14px</option>
+            <option value="16" <%= user.deepLearningConfig.fontSize === '16' ? 'selected' : '' %>>16px</option>
+          </select>
+        </label>
+        <button class="pulse bounce" onclick="saveCustomization()">Save Preset</button>
+        <button class="pulse" onclick="closeCustomize()">Cancel</button>
+      </div>
+    <% } %>
+  </div>
+
+  <!-- Parallax background for depth, minimal resource use -->
+  <div class="parallax-background"></div>
+
+  <!-- Lazy-loaded scripts for performance -->
+  <script src="/public/js/animations.min.js" defer></script>
+  <script src="/public/js/responsive.min.js" defer></script>
+  <script src="/public/js/theme.min.js" defer></script>
+  <script src="/public/js/auth.min.js" defer></script>
+  <script src="/public/js/chart.min.js" defer></script>
+  <script>
+    // Comment: Initializes Deep Learning animations, optimized for mobile
+    document.addEventListener('DOMContentLoaded', () => {
+      if ('<%= user && user.autoLogin %>') {
+        document.querySelector('.deep-learning-container').classList.add('fade-in');
+        document.querySelector('.parallax-background').classList.add('parallax-animation');
+      }
+      // Handle tool bar animations
+      document.querySelectorAll('.pulse').forEach(el => {
+        el.addEventListener('mouseover', () => el.classList.add('pulse'));
+        el.addEventListener('mouseout', () => el.classList.remove('pulse'));
+      });
+      // Set default tab
+      let activeTab = 'notes';
+      switchTab(activeTab);
+    });
+
+    // Comment: Functions for Deep Learning actions, animated transitions
+    function highlightText() {
+      // Comment: Triggers spin animation, highlights selected text with flip
+      document.querySelector('.tool-bar .pulse').classList.add('spin');
+      const selection = window.getSelection().toString();
+      if (selection) {
+        const color = prompt('Choose highlight color (hex or name, e.g., #ffeb3b or yellow)') || '#ffeb3b';
+        const highlight = { text: selection, color, id: Date.now() };
+        // AJAX call to save highlight, slide-up on success
+        fetch('/deep-learning/highlight', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ bookId: '<%= book.id %>', highlight })
+        }).then(response => response.json()).then(data => {
+          if (data.success) {
+            document.querySelector('#highlights').innerHTML += `
+              <div class="highlight-item flip" style="background-color: ${color};">
+                <p>${selection}</p>
+                <button class="pulse" onclick="removeHighlight(${highlight.id})">Remove</button>
+                <button class="pulse" onclick="generateQuestion(${highlight.id})">Generate Question</button>
+              </div>`;
+            document.querySelector('.highlight-item:last-child').classList.add('slide-up');
+          }
+        });
+      }
+    }
+
+    function editText() {
+      // Comment: Triggers bounce animation, enables inline editing with fade
+      document.querySelector('.tool-bar .pulse').classList.add('bounce');
+      const notesArea = document.getElementById('notes-area');
+      notesArea.contentEditable = 'true';
+      notesArea.classList.add('pulse');
+      // Auto-save every 5 seconds, slide-up on save
+      setInterval(() => {
+        fetch('/deep-learning/edit', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ bookId: '<%= book.id %>', notes: notesArea.value })
+        }).then(response => response.json()).then(data => {
+          if (data.success) notesArea.classList.add('slide-up');
+        }), 5000;
+      });
+    }
+
+    function annotateText() {
+      // Comment: Triggers spin animation, adds annotation with pop
+      document.querySelector('.tool-bar .pulse').classList.add('spin');
+      const selection = window.getSelection().toString();
+      if (selection) {
+        const note = prompt('Add annotation:') || '';
+        const annotation = { text: selection, note, id: Date.now() };
+        // AJAX call to save annotation, pop on success
+        fetch('/deep-learning/annotate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ bookId: '<%= book.id %>', annotation })
+        }).then(response => response.json()).then(data => {
+          if (data.success) {
+            alert('Annotation added! ' + note);
+            document.querySelector('#notes-area').classList.add('pop');
+          }
+        });
+      }
+    }
+
+    function exportNotes() {
+      // Comment: Triggers pulse animation, downloads PDF/DOCX with zoom
+      document.querySelector('.tool-bar .pulse').classList.add('pulse');
+      fetch('/deep-learning/export', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ bookId: '<%= book.id %>'})
+      }).then(response => response.blob()).then(blob => {
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${book.name}_notes.pdf`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(url);
+        // Zoom animation on download
+        document.querySelector('.deep-learning-container').classList.add('zoom');
+      });
+    }
+
+    function customizeTools() {
+      // Comment: Triggers pop animation, opens customization modal with slide-up
+      document.querySelector('.tool-bar .pulse').classList.add('pop');
+      document.querySelector('.customize-modal').style.display = 'block';
+      document.querySelector('.customize-modal').classList.add('slide-up');
+    }
+
+    function closeCustomize() {
+      // Comment: Triggers slide-out animation, hides modal
+      document.querySelector('.customize-modal').classList.add('slide-out');
+      setTimeout(() => document.querySelector('.customize-modal').style.display = 'none', 500);
+    }
+
+    function saveCustomization() {
+      // Comment: Triggers bounce animation, saves customization with pop
+      document.querySelector('.customize-modal .pulse.bounce').classList.add('pulse');
+      const layout = document.getElementById('layout').value;
+      const tools = Array.from(document.querySelectorAll('#tool-order span'))
+        .map(el => el.getAttribute('data-tool'));
+      const highlightColor = document.getElementById('highlightColor').value;
+      const background = document.getElementById('background').value;
+      const fontSize = document.getElementById('fontSize').value;
+      fetch('/deep-learning/customize', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          bookId: '<%= book.id %>',
+          config: { layout, tools, highlightColor, background, fontSize }
+        })
+      }).then(response => response.json()).then(data => {
+        if (data.success) {
+          document.querySelector('.customize-modal').classList.add('pop');
+          closeCustomize();
+          // Apply new styles with fade animation
+          document.querySelector('.deep-learning-container').classList.add('fade-in');
+        }
+      });
+    }
+
+    function removeHighlight(id) {
+      // Comment: Triggers flip animation, removes highlight with slide-out
+      document.querySelector(`.highlight-item[data-id="${id}"]`).classList.add('flip');
+      fetch('/deep-learning/remove-highlight', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ bookId: '<%= book.id %>', highlightId: id })
+      }).then(response => response.json()).then(data => {
+        if (data.success) {
+          document.querySelector(`.highlight-item[data-id="${id}"]`).classList.add('slide-out');
+        }
+      });
+    }
+
+    function generateQuestion(id) {
+      // Comment: Triggers spin animation, generates question with pop
+      document.querySelector('.tool-bar .pulse').classList.add('spin');
+      fetch('/deep-learning/generate-question', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ bookId: '<%= book.id %>', highlightId: id })
+      }).then(response => response.json()).then(data => {
+        if (data.success) {
+          alert(`Question Generated: ${data.question.text}`);
+          document.querySelector('.deep-learning-container').classList.add('pop');
+        }
+      });
+    }
+
+    function resumeReading() {
+      // Comment: Triggers slide-up animation, redirects with fade-in
+      document.querySelector('.book-details').classList.add('slide-up');
+      window.location.href = `/notes/${book.id}`;
+    }
+
+    function switchTab(tab) {
+      // Comment: Switches tabs with slide-up animation, optimized for performance
+      document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+      document.querySelectorAll('.tab-button').forEach(button => button.classList.remove('active'));
+      document.querySelector(`.tab-content.${tab}`).classList.add('active', 'slide-up');
+      document.querySelector(`.tab-button.${tab}`).classList.add('active');
+      activeTab = tab;
+      // Chart.js initialization for analytics tab
+      if (tab === 'analytics') {
+        const ctx = document.getElementById('deepLearningChart').getContext('2d');
+        new Chart(ctx, {
+          type: 'bar',
+          data: { 
+            labels: ['Progress', 'Cards', 'Time'],
+            datasets: [{ 
+              data: [<%= book.overallProgress || 0 %>, <%= book.completedCards || 0 %>, <%= book.timeSpent || 0 %>], 
+              backgroundColor: 'var(--accent)' 
+            }]
+          },
+          options: {
+            animation: { duration: 1000, easing: 'easeInOutQuad' }, // Grow, spin animation
+            plugins: { legend: { labels: { color: 'var(--text)' } } }
+          }
+        });
+      }
+    }
+
+    // Comment: Drag-and-drop for tool order (Premium only)
+    if ('<%= user.plan === 'Premium' %>') {
+      const dragArea = document.getElementById('tool-order');
+      new Sortable(dragArea, {
+        animation: 150,
+        onEnd: () => saveCustomization()
+      });
+    }
+  </script>
+</body>
+</html>

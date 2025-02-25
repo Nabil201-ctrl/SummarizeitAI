@@ -1,0 +1,261 @@
+<!-- views/settings.ejs -->
+<!-- Renders the Settings page with slide-up animation, optimized for performance -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>[App Name] Settings</title>
+  <link rel="stylesheet" href="/public/css/main.min.css">
+  <link rel="stylesheet" href="/public/css/darkmode.min.css">
+  <link rel="stylesheet" href="/public/css/animations.min.css">
+</head>
+<body data-theme="<%= user ? user.theme : 'dark' %>">
+  <!-- Header partial with sidebar and theme toggle, auto-login check, review popup trigger -->
+  <%- include('partials/header') %>
+  <!-- Review and Rating popup inclusion -->
+  <%- include('reviewRating') %>
+
+  <!-- Main Settings container with slide-up animation on auto-login -->
+  <div class="settings-container slide-up" <%= user && user.autoLogin ? 'class="fade-in"' : '' %>>
+    <h1>Settings</h1>
+    <!-- Accordion panels with pulse animation, responsive layout -->
+    <div class="settings-panels">
+      <!-- Theme Panel -->
+      <div class="panel pulse">
+        <h2>Theme <button class="pulse" onclick="toggleTheme()">Toggle Theme</button></h2>
+        <div class="panel-content slide-up">
+          <label>Theme:
+            <select name="theme" class="pulse-on-focus" onchange="updateTheme(this.value)">
+              <option value="dark" <%= user.theme === 'dark' ? 'selected' : '' %>>Dark</option>
+              <option value="light" <%= user.theme === 'light' ? 'selected' : '' %>>Light</option>
+            </select>
+          </label>
+          <label>Accent Color:
+            <input type="color" name="accent" value="<%= user.accentColor || '#007bff' %>" class="pulse-on-focus" onchange="updateAccent(this.value)">
+          </label>
+          <label>Font:
+            <select name="font" class="pulse-on-focus" onchange="updateFont(this.value)">
+              <option value="arial" <%= user.font === 'arial' ? 'selected' : '' %>>Arial</option>
+              <option value="times" <%= user.font === 'times' ? 'selected' : '' %>>Times New Roman</option>
+            </select>
+          </label>
+          <button class="pulse bounce" onclick="saveTheme()">Save Theme</button>
+        </div>
+      </div>
+
+      <!-- Account Panel -->
+      <div class="panel pulse">
+        <h2>Account</h2>
+        <div class="panel-content slide-up">
+          <label>Name:
+            <input type="text" name="name" value="<%= user.name %>" class="pulse-on-focus">
+          </label>
+          <label>Email:
+            <input type="email" name="email" value="<%= user.email %>" class="pulse-on-focus" readonly>
+          </label>
+          <label>Password:
+            <input type="password" name="password" placeholder="New Password" class="pulse-on-focus">
+          </label>
+          <button class="pulse bounce" onclick="saveAccount()">Save Changes</button>
+        </div>
+      </div>
+
+      <!-- Plan Panel -->
+      <div class="panel pulse">
+        <h2>Plan</h2>
+        <div class="panel-content slide-up">
+          <p>Current Plan: <%= user.plan %></p>
+          <% if (user.plan !== 'Premium') { %>
+            <p>Limits: <%= user.plan === 'Basic' ? '180 Summaries, 180 Flashcards, 100 Questions' : '50 Summaries, 50 Flashcards, 20 Questions' %></p>
+            <p>Storage: <%= user.storageUsed || 0 %>MB / <%= user.plan === 'Basic' ? '1GB' : '100MB' %></p>
+            <button class="pulse" onclick="upgradePlan()">Upgrade to Premium ($15/month)</button>
+          <% } else { %>
+            <p>Unlimited Features, 10GB Storage</p>
+            <button class="pulse" onclick="manageSubscription()">Manage Subscription</button>
+          <% } %>
+          <!-- PayPal integration with spin animation -->
+          <% if (user.plan !== 'Premium') { %>
+            <button class="pulse spin" id="paypal-upgrade">Upgrade Now with PayPal</button>
+          <% } %>
+        </div>
+      </div>
+
+      <!-- Notifications Panel -->
+      <div class="panel pulse">
+        <h2>Notifications</h2>
+        <div class="panel-content slide-up">
+          <label>Study Reminders:
+            <input type="checkbox" name="studyReminders" <%= user.notifications?.studyReminders ? 'checked' : '' %> class="pulse-on-focus">
+          </label>
+          <label>Limit Alerts:
+            <input type="checkbox" name="limitAlerts" <%= user.notifications?.limitAlerts ? 'checked' : '' %> class="pulse-on-focus">
+          </label>
+          <label>Team Updates (Premium):
+            <% if (user.plan === 'Premium') { %>
+              <input type="checkbox" name="teamUpdates" <%= user.notifications?.teamUpdates ? 'checked' : '' %> class="pulse-on-focus">
+            <% } else { %>
+              <input type="checkbox" disabled> Upgrade for Team Notifications
+            <% } %>
+          </label>
+          <button class="pulse bounce" onclick="saveNotifications()">Save Notifications</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Parallax background for depth, minimal resource use -->
+  <div class="parallax-background"></div>
+
+  <!-- Lazy-loaded scripts for performance -->
+  <script src="/public/js/animations.min.js" defer></script>
+  <script src="/public/js/responsive.min.js" defer></script>
+  <script src="/public/js/theme.min.js" defer></script>
+  <script src="/public/js/auth.min.js" defer></script>
+  <script src="/public/js/review.min.js" defer></script>
+  <script>
+    // Comment: Initializes Settings animations, optimized for mobile, triggers review popup
+    document.addEventListener('DOMContentLoaded', () => {
+      if ('<%= user && user.autoLogin %>') {
+        document.querySelector('.settings-container').classList.add('fade-in');
+        document.querySelector('.parallax-background').classList.add('parallax-animation');
+      }
+      // Handle panel animations
+      document.querySelectorAll('.pulse, .pulse-on-focus').forEach(el => {
+        el.addEventListener('mouseover', () => el.classList.add('pulse'));
+        el.addEventListener('mouseout', () => el.classList.remove('pulse'));
+        el.addEventListener('focus', () => el.classList.add('pulse'));
+        el.addEventListener('blur', () => el.classList.remove('pulse'));
+      });
+      // Accordion toggle with slide-up
+      document.querySelectorAll('.panel h2').forEach(header => {
+        header.addEventListener('click', () => {
+          const content = header.nextElementSibling;
+          content.classList.toggle('slide-up');
+          content.style.display = content.style.display === 'none' ? 'block' : 'none';
+        });
+      });
+
+      // Check for review popup
+      fetch('/review/check')
+        .then(response => response.json())
+        .then(data => {
+          if (data.showPopup) {
+            document.querySelector('.review-modal').style.display = 'block';
+            document.querySelector('.review-modal').classList.add('pop');
+          }
+        });
+    });
+
+    // Comment: Functions for settings actions, animated transitions
+    function toggleTheme() {
+      // Comment: Triggers flip animation, toggles dark/light mode with fade
+      document.querySelector('.settings-container').classList.add('flip');
+      const currentTheme = document.body.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+      updateTheme(currentTheme);
+    }
+
+    function updateTheme(theme) {
+      // Comment: Updates theme with fade animation, optimized for performance
+      document.body.setAttribute('data-theme', theme);
+      fetch('/settings/theme', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ theme })
+      }).then(response => response.json()).then(data => {
+        if (data.success) document.querySelector('.settings-container').classList.add('fade-in');
+      });
+    }
+
+    function updateAccent(color) {
+      // Comment: Updates accent color with pulse animation
+      document.documentElement.style.setProperty('--accent', color);
+      fetch('/settings/accent', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ accentColor: color })
+      }).then(response => response.json()).then(data => {
+        if (data.success) document.querySelector('.settings-container').classList.add('pulse');
+      });
+    }
+
+    function updateFont(font) {
+      // Comment: Updates font with slide-up animation
+      document.body.style.fontFamily = font;
+      fetch('/settings/font', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ font })
+      }).then(response => response.json()).then(data => {
+        if (data.success) document.querySelector('.settings-container').classList.add('slide-up');
+      });
+    }
+
+    function saveTheme() {
+      // Comment: Saves theme with bounce animation, optimized for mobile
+      document.querySelector('.pulse.bounce').classList.add('pulse');
+      const theme = document.querySelector('select[name="theme"]').value;
+      const accent = document.querySelector('input[name="accent"]').value;
+      const font = document.querySelector('select[name="font"]').value;
+      fetch('/settings/save-theme', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ theme, accentColor: accent, font })
+      }).then(response => response.json()).then(data => {
+        if (data.success) {
+          document.querySelector('.settings-container').classList.add('bounce');
+          alert('Theme saved!');
+        }
+      });
+    }
+
+    function saveAccount() {
+      // Comment: Saves account changes with bounce animation, optimized for performance
+      document.querySelector('.pulse.bounce').classList.add('pulse');
+      const name = document.querySelector('input[name="name"]').value;
+      const email = document.querySelector('input[name="email"]').value;
+      const password = document.querySelector('input[name="password"]').value;
+      fetch('/settings/save-account', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, email, password })
+      }).then(response => response.json()).then(data => {
+        if (data.success) {
+          document.querySelector('.settings-container').classList.add('bounce');
+          alert('Account updated!');
+        }
+      });
+    }
+
+    function upgradePlan() {
+      // Comment: Triggers pulse animation, redirects to PayPal for Premium
+      document.querySelector('.pulse').classList.add('pulse');
+      window.location.href = '/paypal/subscribe?plan=Premium';
+    }
+
+    function manageSubscription() {
+      // Comment: Triggers spin animation, redirects to PayPal management
+      document.querySelector('.pulse').classList.add('spin');
+      window.location.href = '/paypal/manage';
+    }
+
+    function saveNotifications() {
+      // Comment: Saves notifications with bounce animation, optimized for mobile
+      document.querySelector('.pulse.bounce').classList.add('pulse');
+      const studyReminders = document.querySelector('input[name="studyReminders"]').checked;
+      const limitAlerts = document.querySelector('input[name="limitAlerts"]').checked;
+      const teamUpdates = document.querySelector('input[name="teamUpdates"]')?.checked || false;
+      fetch('/settings/save-notifications', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ studyReminders, limitAlerts, teamUpdates })
+      }).then(response => response.json()).then(data => {
+        if (data.success) {
+          document.querySelector('.settings-container').classList.add('bounce');
+          alert('Notifications saved!');
+        }
+      });
+    }
+  </script>
+</body>
+</html>

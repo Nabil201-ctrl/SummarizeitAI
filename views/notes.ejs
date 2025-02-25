@@ -1,0 +1,120 @@
+<!-- views/notes.ejs -->
+<!-- Renders the Notes page with slide-up animation, optimized for performance -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>[App Name] Notes</title>
+  <link rel="stylesheet" href="/public/css/main.min.css">
+  <link rel="stylesheet" href="/public/css/darkmode.min.css">
+  <link rel="stylesheet" href="/public/css/animations.min.css">
+</head>
+<body data-theme="<%= user ? user.theme : 'dark' %>">
+  <!-- Header partial with sidebar and theme toggle, auto-login check, review popup trigger -->
+  <%- include('partials/header') %>
+  <!-- Review and Rating popup inclusion -->
+  <%- include('reviewRating') %>
+
+  <!-- Main Notes container with slide-up animation on auto-login -->
+  <div class="notes-container slide-up" <%= user && user.autoLogin ? 'class="fade-in"' : '' %>>
+    <h1>Notes</h1>
+    <!-- Note list with slide-up animation, responsive grid -->
+    <div class="note-list">
+      <% if (user.notes && user.notes.length > 0) { %>
+        <% user.notes.forEach(note => { %>
+          <div class="note-item slide-up" style="background: var(--background); color: var(--text);">
+            <h3><%= note.name %></h3>
+            <p>Created: <%= new Date(note.date).toLocaleDateString() %></p>
+            <p>Progress: <%= note.progress || 0 %>% Edited</p>
+            <!-- Actions with pulse animation -->
+            <button class="pulse" onclick="viewNote('<%= note.id %>')">View/Edit</button>
+            <button class="pulse" onclick="deleteNote('<%= note.id %>')">Delete</button>
+            <button class="pulse" onclick="generateQuestionsFromNote('<%= note.id %>')">Generate Questions</button>
+          </div>
+        <% }); %>
+      <% } else { %>
+        <p class="no-notes pulse">No notes yet. <button class="pulse" onclick="createNewNote()">Create Now</button></p>
+      <% } %>
+    </div>
+
+    <!-- Create New Note button with bounce animation -->
+    <button class="pulse bounce" onclick="createNewNote()">Create New Note</button>
+    <!-- PayPal upgrade button for Freemium/Basic, animated confetti on success -->
+    <% if (user.plan !== 'Premium') { %>
+      <button class="pulse" onclick="upgradeNotes()">Upgrade Notes with PayPal</button>
+    <% } %>
+  </div>
+
+  <!-- Parallax background for depth, minimal resource use -->
+  <div class="parallax-background"></div>
+
+  <!-- Lazy-loaded scripts for performance -->
+  <script src="/public/js/animations.min.js" defer></script>
+  <script src="/public/js/responsive.min.js" defer></script>
+  <script src="/public/js/theme.min.js" defer></script>
+  <script src="/public/js/auth.min.js" defer></script>
+  <script src="/public/js/review.min.js" defer></script>
+  <script>
+    // Comment: Initializes Notes animations, optimized for mobile, triggers review popup
+    document.addEventListener('DOMContentLoaded', () => {
+      if ('<%= user && user.autoLogin %>') {
+        document.querySelector('.notes-container').classList.add('fade-in');
+        document.querySelector('.parallax-background').classList.add('parallax-animation');
+      }
+      // Handle note actions with animations
+      document.querySelectorAll('.pulse, .pulse-on-focus').forEach(el => {
+        el.addEventListener('mouseover', () => el.classList.add('pulse'));
+        el.addEventListener('mouseout', () => el.classList.remove('pulse'));
+        el.addEventListener('focus', () => el.classList.add('pulse'));
+        el.addEventListener('blur', () => el.classList.remove('pulse'));
+      });
+
+      // Check for review popup
+      fetch('/review/check')
+        .then(response => response.json())
+        .then(data => {
+          if (data.showPopup) {
+            document.querySelector('.review-modal').style.display = 'block';
+            document.querySelector('.review-modal').classList.add('pop');
+          }
+        });
+    });
+
+    // Comment: Functions for note actions, animated transitions
+    function viewNote(id) {
+      // Trigger slide-up animation, redirect with fade-in
+      document.querySelector('.note-item').classList.add('slide-up');
+      window.location.href = `/notes/view/${id}`;
+    }
+    function deleteNote(id) {
+      // Trigger pulse animation, confirm with bounce
+      if (confirm('Delete this note?')) {
+        document.querySelector('.note-item').classList.add('pulse');
+        // AJAX call to delete, slide-out on success
+        fetch(`/notes/delete/${id}`, { method: 'DELETE' })
+          .then(response => response.json())
+          .then(data => {
+            if (data.success) document.querySelector('.note-item').classList.add('slide-out');
+          });
+      }
+    }
+    function generateQuestionsFromNote(id) {
+      // Trigger spin animation, redirect with pop
+      document.querySelector('.note-item').classList.add('spin');
+      window.location.href = `/questions/generate?source=notes&noteId=${id}`;
+    }
+    function createNewNote() {
+      // Trigger bounce animation, redirect with slide-up
+      document.querySelector('.pulse.bounce').classList.add('pulse');
+      window.location.href = '/notes/create';
+    }
+    function upgradeNotes() {
+      // Comment: Triggers spin animation, PayPal redirect with confetti
+      document.querySelector('.pulse').classList.add('spin');
+      // PayPal integration (to be implemented in paymentService.js)
+      window.location.href = '/paypal/upgrade-notes';
+    }
+  </script>
+</body>
+</html>
